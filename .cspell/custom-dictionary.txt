@@ -9,6 +9,7 @@ chokidar
 creatordate
 dbaeumer
 docstrings
+dongminyu
 esbuild
 espree
 esrecurse
@@ -21,6 +22,7 @@ gopd
 hasown
 haxe
 hlsl
+htmlparser
 humanfs
 humanwhocodes
 isaacs

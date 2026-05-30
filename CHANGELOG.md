@@ -17,4 +17,4 @@ Initial release.
 - **Worktrees** section: shows all worktrees with branch and HEAD info; click to open in a new VS Code window
 - Refresh button in the view title bar
 - Output channel "Minimal Git Explorer" for git error logging
-- Checkout confirmation dialog when the working tree is dirty
+- Confirmation dialogs before checkout or stash apply when the working tree is dirty

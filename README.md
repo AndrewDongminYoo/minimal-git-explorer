@@ -32,11 +32,12 @@ Opens in the **Source Control** panel (⌃⇧G). Six collapsible sections, all p
 | Open worktree    | Click any worktree (opens in new window) |
 | Refresh          | Click the ↻ button in the view title bar |
 
-Checkout asks for confirmation when the working tree has uncommitted changes. Git errors are shown in a notification and logged to the **Minimal Git Explorer** output channel.
+Checkout and stash apply ask for confirmation when the working tree has uncommitted changes. Git errors are summarized in a notification and logged to the **Minimal Git Explorer** output channel.
 
 ## Requirements
 
 - Git must be installed and available on `PATH`.
+- VS Code 1.74.0 or newer.
 - A workspace folder containing a Git repository.
 
 ## No configuration required
@@ -52,7 +53,7 @@ This extension works out of the box. There are no settings to configure.
 
 ## Known limitations (v0.1.0)
 
-- Single-repository workspaces only. Multi-root workspaces use the first folder.
+- Single-repository focus. Multi-root workspaces use the first folder that resolves to a Git repository.
 - No auto-refresh. Use the toolbar refresh button after git operations.
 - Stash mutations limited to apply. Pop/drop deferred to v0.2.x.
 - No worktree creation/removal. Use the CLI for those.
