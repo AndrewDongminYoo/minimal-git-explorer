@@ -14,7 +14,10 @@ export async function showStash(
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
   try {
-    const output = await gitService.showStash(item.stash.ref);
+    const output = await gitService.showStash(
+      item.stash.ref,
+      item.stash.worktreePath,
+    );
     const uri = contentProvider.create(
       output,
       `stash-${item.stash.index}.diff`,
@@ -37,7 +40,7 @@ export async function applyStash(
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
   try {
-    await gitService.applyStash(item.stash.ref);
+    await gitService.applyStash(item.stash.ref, item.stash.worktreePath);
     provider.refresh();
     vscode.window.showInformationMessage(`Applied ${item.stash.ref}`);
   } catch (err) {

@@ -150,12 +150,19 @@ export class StashItem extends vscode.TreeItem {
   constructor(public readonly stash: GitStash) {
     super(stash.message, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("archive");
-    this.description = `${stash.ref} · ${stash.branch}`;
+
+    const wtLabel = stash.worktreePath
+      ? ` · ${path.basename(stash.worktreePath)}`
+      : "";
+    this.description = `${stash.ref} · ${stash.branch}${wtLabel}`;
 
     const md = new vscode.MarkdownString(undefined, true);
     md.appendMarkdown(`$(archive) **${escapeMarkdown(stash.message)}**\n\n`);
     md.appendMarkdown(`$(git-branch) \`${stash.branch}\`\n\n`);
     md.appendMarkdown(`$(list-ordered) ${stash.ref}`);
+    if (stash.worktreePath) {
+      md.appendMarkdown(`\n\n$(folder-opened) \`${stash.worktreePath}\``);
+    }
     this.tooltip = md;
 
     this.contextValue = "stash";

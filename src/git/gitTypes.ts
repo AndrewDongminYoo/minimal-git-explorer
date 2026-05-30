@@ -31,6 +31,7 @@ export interface GitStash {
   ref: string;
   branch: string;
   message: string;
+  worktreePath?: string;
 }
 
 export interface GitTag {
