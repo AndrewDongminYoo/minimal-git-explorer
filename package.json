@@ -18,7 +18,8 @@
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Source Control"
+    "Other",
+    "SCM Providers"
   ],
   "keywords": [
     "git",
