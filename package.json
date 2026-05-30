@@ -2,7 +2,7 @@
   "name": "minimal-git-explorer",
   "displayName": "Minimal Git Explorer",
   "description": "A lightweight local-first Git explorer for commits, branches, remotes, stashes, tags, and worktrees in the VS Code Source Control sidebar.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "dongminyu",
   "license": "MIT",
   "icon": "resources/icon.png",

@@ -2,6 +2,30 @@
 
 All notable changes to Minimal Git Explorer are documented here.
 
+## [0.2.0] — 2026-05-30
+
+Release hardening and Git Explorer stability improvements.
+
+### Added
+
+- Detached accordion layout backed by six independent TreeViews for commits, branches, remotes, stashes, tags, and worktrees
+- Release smoke and integration coverage for extension activation, Git service behavior, repository detection, tree items, and stash commands
+
+### Changed
+
+- Updated release packaging metadata and extension icon assets
+- Fixed the VS Code build task problem matcher and Trunk lint action configuration
+
+### Fixed
+
+- Collected stashes from every worktree instead of only the main worktree
+- Stabilized repository discovery and stash reference handling across worktrees
+- Guarded stash apply when the working tree is dirty and tightened command exposure to the intended explorer actions
+
+### Security
+
+- Added dependency overrides for vulnerable transitive versions of `diff` and `serialize-javascript`
+
 ## [0.1.0] — 2026-05-30
 
 Initial release.
