@@ -4,6 +4,10 @@ A lightweight, local-first Git explorer for the VS Code Source Control sidebar.
 
 Browse commits, branches, remotes, stashes, tags, and worktrees — without accounts, subscriptions, or telemetry.
 
+## Usage example
+
+![Minimal Git Explorer usage example in the VS Code Source Control sidebar](resources/preview.png)
+
 ## Features
 
 ### Git Explorer sidebar
