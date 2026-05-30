@@ -1,11 +1,17 @@
 # Custom Dictionary Words
 ccls
+creatordate
 docstrings
 haxe
 hlsl
+libgit
+objectname
 omnisharp
 phpactor
 rego
 solargraph
 solidlsp
 systemverilog
+toplevel
+Worktree
+Worktrees
