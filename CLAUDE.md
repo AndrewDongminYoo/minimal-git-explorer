@@ -6,7 +6,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A lightweight VS Code extension that adds a focused Git explorer to the Source Control sidebar. Local-first, read-first, no accounts, no telemetry, no background indexing. Target version: `0.1.0`.
 
-See `PLAN.md` for the full specification, phased implementation plan, and non-goals.
+**Current state:** Scaffold only (`helloWorld` command stub). Nothing from the planned architecture is implemented yet.
+
+## Documentation Map
+
+Read CLAUDE.md first (always). Then read only what the task requires:
+
+| Working on…                       | Read…                                    |
+| --------------------------------- | ---------------------------------------- |
+| VS Code view/command contribution | `docs/specs/git-explorer-spec.md`        |
+| Git data types / parsers          | `docs/specs/git-data-contract.md`        |
+| Why git CLI (not VS Code git API) | `docs/notes/adr-001-git-cli-only.md`     |
+| Why esbuild                       | `docs/notes/adr-002-esbuild-bundler.md`  |
+| Why parsers are pure functions    | `docs/notes/adr-003-parser-isolation.md` |
+| Phase 1 (static TreeView)         | `docs/plans/phase-1-basic-view.md`       |
+| Phase 2 (git data layer)          | `docs/plans/phase-2-git-service.md`      |
+| Phase 3 (render real data)        | `docs/plans/phase-3-tree-rendering.md`   |
+| Phase 4 (read actions)            | `docs/plans/phase-4-read-actions.md`     |
+| Phase 5 (mutations)               | `docs/plans/phase-5-mutations.md`        |
+| Full product spec / non-goals     | `PLAN.md`                                |
+
+> Do not read `PLAN.md` for implementation details — use the `docs/` files above. `PLAN.md` is the product source-of-truth; the `docs/` files are the implementation-ready distillations.
 
 ## Common Commands
 
@@ -46,7 +66,7 @@ TypeScript target is ES2022, module system is Node16. `tsconfig.json` enables st
 
 The extension is not yet implemented beyond the scaffold. The intended structure is:
 
-```
+```log
 src/
   extension.ts          — activate/deactivate; registers TreeView and commands
   git/
@@ -87,7 +107,7 @@ src/
 
 Registered commands for 0.1.0:
 
-```
+```bash
 minimal-git-explorer.refresh
 minimal-git-explorer.openCommit
 minimal-git-explorer.checkoutBranch
