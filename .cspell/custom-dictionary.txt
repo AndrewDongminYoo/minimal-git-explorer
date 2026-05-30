@@ -1,0 +1,11 @@
+# Custom Dictionary Words
+ccls
+docstrings
+haxe
+hlsl
+omnisharp
+phpactor
+rego
+solargraph
+solidlsp
+systemverilog
