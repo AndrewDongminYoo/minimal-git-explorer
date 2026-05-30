@@ -37,27 +37,33 @@
       "scm": [
         {
           "id": "minimal-git-explorer.commits",
-          "name": "Commits"
+          "name": "Commits",
+          "icon": "resources/views/commits.svg"
         },
         {
           "id": "minimal-git-explorer.branches",
-          "name": "Branches"
+          "name": "Branches",
+          "icon": "resources/views/branches.svg"
         },
         {
           "id": "minimal-git-explorer.remotes",
-          "name": "Remotes"
+          "name": "Remotes",
+          "icon": "resources/views/remotes.svg"
         },
         {
           "id": "minimal-git-explorer.stashes",
-          "name": "Stashes"
+          "name": "Stashes",
+          "icon": "resources/views/stashes.svg"
         },
         {
           "id": "minimal-git-explorer.tags",
-          "name": "Tags"
+          "name": "Tags",
+          "icon": "resources/views/tags.svg"
         },
         {
           "id": "minimal-git-explorer.worktrees",
-          "name": "Worktrees"
+          "name": "Worktrees",
+          "icon": "resources/views/worktrees.svg"
         }
       ]
     },
