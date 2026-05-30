@@ -2,22 +2,123 @@
   "name": "minimal-git-explorer",
   "displayName": "Minimal Git Explorer",
   "description": "A lightweight local-first Git explorer for commits, branches, remotes, stashes, tags, and worktrees in the VS Code Source Control sidebar.",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "publisher": "dongminyu",
   "engines": {
     "vscode": "^1.120.0"
   },
   "categories": [
-    "SCM Providers"
+    "Source Control"
+  ],
+  "keywords": [
+    "git",
+    "source-control",
+    "commits",
+    "branches",
+    "stashes",
+    "worktrees",
+    "tags"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "views": {
+      "scm": [
+        {
+          "id": "minimal-git-explorer.gitExplorer",
+          "name": "Minimal Git Explorer"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "minimal-git-explorer.helloWorld",
-        "title": "Hello World"
+        "command": "minimal-git-explorer.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "Git Explorer"
+      },
+      {
+        "command": "minimal-git-explorer.openCommit",
+        "title": "Open Commit",
+        "category": "Git Explorer"
+      },
+      {
+        "command": "minimal-git-explorer.checkoutBranch",
+        "title": "Checkout Branch",
+        "category": "Git Explorer"
+      },
+      {
+        "command": "minimal-git-explorer.copyRemoteUrl",
+        "title": "Copy Remote URL",
+        "category": "Git Explorer"
+      },
+      {
+        "command": "minimal-git-explorer.showStash",
+        "title": "Show Stash",
+        "category": "Git Explorer"
+      },
+      {
+        "command": "minimal-git-explorer.applyStash",
+        "title": "Apply Stash",
+        "category": "Git Explorer"
+      },
+      {
+        "command": "minimal-git-explorer.copyTagName",
+        "title": "Copy Tag Name",
+        "category": "Git Explorer"
+      },
+      {
+        "command": "minimal-git-explorer.openWorktree",
+        "title": "Open Worktree in New Window",
+        "category": "Git Explorer"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "minimal-git-explorer.refresh",
+          "when": "view == minimal-git-explorer.gitExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "minimal-git-explorer.openCommit",
+          "when": "view == minimal-git-explorer.gitExplorer && viewItem == commit",
+          "group": "1_commit"
+        },
+        {
+          "command": "minimal-git-explorer.checkoutBranch",
+          "when": "view == minimal-git-explorer.gitExplorer && viewItem == branch",
+          "group": "1_branch"
+        },
+        {
+          "command": "minimal-git-explorer.copyRemoteUrl",
+          "when": "view == minimal-git-explorer.gitExplorer && viewItem == remoteUrl",
+          "group": "1_remote"
+        },
+        {
+          "command": "minimal-git-explorer.showStash",
+          "when": "view == minimal-git-explorer.gitExplorer && viewItem == stash",
+          "group": "1_stash@1"
+        },
+        {
+          "command": "minimal-git-explorer.applyStash",
+          "when": "view == minimal-git-explorer.gitExplorer && viewItem == stash",
+          "group": "1_stash@2"
+        },
+        {
+          "command": "minimal-git-explorer.copyTagName",
+          "when": "view == minimal-git-explorer.gitExplorer && viewItem == tag",
+          "group": "1_tag"
+        },
+        {
+          "command": "minimal-git-explorer.openWorktree",
+          "when": "view == minimal-git-explorer.gitExplorer && viewItem == worktree",
+          "group": "1_worktree"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
