@@ -27,7 +27,7 @@ export async function showStash(
     if (err instanceof GitError) {
       outputChannel.appendLine(`[stash show] ${err.stderr}`);
       vscode.window.showErrorMessage(
-        `Failed to show stash: ${err.stderr || err.message}`,
+        "Failed to show stash. See the Minimal Git Explorer output for details.",
       );
     }
   }
@@ -39,15 +39,28 @@ export async function applyStash(
   provider: { refresh(): void },
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
+  const stashCwd = item.stash.worktreePath;
+  const dirty = await gitService.isDirty(stashCwd);
+  if (dirty) {
+    const choice = await vscode.window.showWarningMessage(
+      `Working tree has uncommitted changes. Apply ${item.stash.ref} anyway?`,
+      { modal: true },
+      "Apply Stash",
+    );
+    if (choice !== "Apply Stash") {
+      return;
+    }
+  }
+
   try {
-    await gitService.applyStash(item.stash.ref, item.stash.worktreePath);
+    await gitService.applyStash(item.stash.ref, stashCwd);
     provider.refresh();
     vscode.window.showInformationMessage(`Applied ${item.stash.ref}`);
   } catch (err) {
     if (err instanceof GitError) {
       outputChannel.appendLine(`[stash apply] ${err.stderr}`);
       vscode.window.showErrorMessage(
-        `Failed to apply stash: ${err.stderr || err.message}`,
+        "Failed to apply stash. See the Minimal Git Explorer output for details.",
       );
     }
   }

@@ -34,7 +34,7 @@ export async function checkoutBranch(
     if (err instanceof GitError) {
       outputChannel.appendLine(`[checkout] ${err.stderr}`);
       vscode.window.showErrorMessage(
-        `Failed to checkout "${branchName}": ${err.stderr || err.message}`,
+        `Failed to checkout "${branchName}". See the Minimal Git Explorer output for details.`,
       );
     }
   }

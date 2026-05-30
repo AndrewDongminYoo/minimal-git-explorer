@@ -24,6 +24,8 @@ export function registerCommands(
   contentProvider: GitExplorerContentProvider,
   outputChannel: vscode.OutputChannel,
 ): void {
+  const refreshAll = { refresh: () => providers.forEach((p) => p.refresh()) };
+
   context.subscriptions.push(
     vscode.commands.registerCommand("minimal-git-explorer.refresh", () =>
       providers.forEach((p) => p.refresh()),
@@ -45,15 +47,7 @@ export function registerCommands(
         if (!gitService || !(item instanceof BranchItem)) {
           return;
         }
-        const refreshBranches = providers.find(
-          (p) => p.constructor.name === "BranchesProvider",
-        );
-        await checkoutBranch(
-          item,
-          gitService,
-          { refresh: () => refreshBranches?.refresh() },
-          outputChannel,
-        );
+        await checkoutBranch(item, gitService, refreshAll, outputChannel);
       },
     ),
 
@@ -83,15 +77,7 @@ export function registerCommands(
         if (!gitService || !(item instanceof StashItem)) {
           return;
         }
-        const refreshStashes = providers.find(
-          (p) => p.constructor.name === "StashesProvider",
-        );
-        await applyStash(
-          item,
-          gitService,
-          { refresh: () => refreshStashes?.refresh() },
-          outputChannel,
-        );
+        await applyStash(item, gitService, refreshAll, outputChannel);
       },
     ),
 

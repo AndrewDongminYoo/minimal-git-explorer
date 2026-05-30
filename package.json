@@ -115,7 +115,7 @@
         },
         {
           "command": "minimal-git-explorer.checkoutBranch",
-          "when": "view == minimal-git-explorer.branches && viewItem == branch",
+          "when": "view == minimal-git-explorer.branches && viewItem == localBranch",
           "group": "1_branch"
         },
         {

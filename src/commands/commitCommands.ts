@@ -24,7 +24,7 @@ export async function openCommit(
     if (err instanceof GitError) {
       outputChannel.appendLine(`[show commit] ${err.stderr}`);
       vscode.window.showErrorMessage(
-        `Failed to open commit: ${err.stderr || err.message}`,
+        "Failed to open commit. See the Minimal Git Explorer output for details.",
       );
     }
   }

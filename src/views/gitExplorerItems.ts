@@ -97,7 +97,7 @@ export class BranchItem extends vscode.TreeItem {
     }
     this.tooltip = md;
 
-    this.contextValue = "branch";
+    this.contextValue = branch.isRemote ? "remoteBranch" : "localBranch";
     if (!branch.isRemote) {
       this.command = {
         command: "minimal-git-explorer.checkoutBranch",
