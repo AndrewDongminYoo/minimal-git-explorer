@@ -63,7 +63,7 @@ export class GitService {
     for (const wt of worktrees) {
       try {
         const stdout = await execGit(
-          ["stash", "list", "--date=relative"],
+          ["stash", "list", "--format=%gd: %gs"],
           wt.path,
         );
         const stashes = parseStashes(stdout);
@@ -90,9 +90,16 @@ export class GitService {
     return this.run(["worktree", "list", "--porcelain"], parseWorktrees);
   }
 
-  async isDirty(): Promise<boolean> {
-    const stdout = await this.run(["status", "--porcelain"], (s) => s);
-    return stdout.trim().length > 0;
+  async isDirty(cwd = this.repoRoot): Promise<boolean> {
+    try {
+      const stdout = await execGit(["status", "--porcelain"], cwd);
+      return stdout.trim().length > 0;
+    } catch (err) {
+      if (err instanceof GitError) {
+        this.outputChannel.appendLine(`[git status --porcelain] ${err.stderr}`);
+      }
+      return false;
+    }
   }
 
   async showCommit(fullHash: string): Promise<string> {

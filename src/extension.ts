@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { detectGitRoot } from "./git/repository";
+import { findFirstGitRoot } from "./git/repository";
 import { GitService } from "./git/gitService";
 import {
   GIT_EXPLORER_SCHEME,
@@ -41,11 +41,12 @@ export async function activate(
     ),
   );
 
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const workspaceFolders =
+    vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ?? [];
   let gitService: GitService | null = null;
 
-  if (workspaceFolder) {
-    const repoRoot = await detectGitRoot(workspaceFolder);
+  if (workspaceFolders.length > 0) {
+    const repoRoot = await findFirstGitRoot(workspaceFolders);
     if (repoRoot) {
       gitService = new GitService(repoRoot, outputChannel);
     }

@@ -16,3 +16,16 @@ export async function detectGitRoot(
     return null;
   }
 }
+
+export async function findFirstGitRoot(
+  workspaceFolders: string[],
+): Promise<string | null> {
+  for (const workspaceFolder of workspaceFolders) {
+    const repoRoot = await detectGitRoot(workspaceFolder);
+    if (repoRoot) {
+      return repoRoot;
+    }
+  }
+
+  return null;
+}
