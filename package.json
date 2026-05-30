@@ -4,6 +4,11 @@
   "description": "A lightweight local-first Git explorer for commits, branches, remotes, stashes, tags, and worktrees in the VS Code Source Control sidebar.",
   "version": "0.1.0",
   "publisher": "dongminyu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dongminyu/minimal-git-explorer"
+  },
   "engines": {
     "vscode": "^1.120.0"
   },

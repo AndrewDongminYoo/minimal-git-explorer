@@ -3,10 +3,16 @@
 out/**
 node_modules/**
 src/**
+docs/**
+.trunk/**
+.remember/**
 .gitignore
+.npmrc
 .yarnrc
 esbuild.js
 vsc-extension-quickstart.md
+pnpm-workspace.yaml
+PLAN.md
 **/tsconfig.json
 **/eslint.config.mjs
 **/*.map

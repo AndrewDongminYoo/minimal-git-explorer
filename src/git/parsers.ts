@@ -47,16 +47,16 @@ export function parseLocalBranches(stdout: string): GitBranch[] {
   if (!stdout.trim()) {
     return [];
   }
+  // Do NOT call trim() on the whole stdout before splitting — git's %(HEAD) field
+  // outputs a literal space for non-current branches, and trim() would strip it
+  // along with surrounding tabs when it appears at the end of the last line.
   return stdout
-    .trim()
     .split("\n")
+    .filter((line) => line.trim() !== "")
     .flatMap((line) => {
       const parts = line.split("\t");
-      if (parts.length < 4) {
-        return [];
-      }
-      const [name, shortHash, upstream, head] = parts;
-      if (!name.trim()) {
+      const [name, shortHash = "", upstream = "", head = ""] = parts;
+      if (!name || !name.trim()) {
         return [];
       }
       return [

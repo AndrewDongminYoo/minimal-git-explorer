@@ -1,71 +1,62 @@
-# minimal-git-explorer README
+# Minimal Git Explorer
 
-This is the README for your extension "minimal-git-explorer". After writing up a brief description, we recommend including the following sections.
+A lightweight, local-first Git explorer for the VS Code Source Control sidebar.
+
+Browse commits, branches, remotes, stashes, tags, and worktrees — without accounts, subscriptions, or telemetry.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### Git Explorer sidebar
 
-For example if there is an image subfolder under your extension project workspace:
+Opens in the **Source Control** panel (⌃⇧G). Six collapsible sections, all populated from your local repository:
 
-\!\[feature X\]\(images/feature-x.png\)
+| Section       | What it shows                                          |
+| ------------- | ------------------------------------------------------ |
+| **Commits**   | Last 50 commits — hash, subject, author, relative date |
+| **Branches**  | Local and remote branches; current branch marked       |
+| **Remotes**   | Configured remotes with fetch/push URLs                |
+| **Stashes**   | Full stash list with branch and message                |
+| **Tags**      | Latest 50 tags sorted by creation date                 |
+| **Worktrees** | All worktrees with branch and HEAD info                |
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Actions
+
+| Action           | How                                      |
+| ---------------- | ---------------------------------------- |
+| Open commit diff | Click any commit                         |
+| Checkout branch  | Click any local branch                   |
+| Copy remote URL  | Click any remote URL                     |
+| Show stash diff  | Click any stash                          |
+| Apply stash      | Right-click stash → Apply Stash          |
+| Copy tag name    | Click any tag                            |
+| Open worktree    | Click any worktree (opens in new window) |
+| Refresh          | Click the ↻ button in the view title bar |
+
+Checkout asks for confirmation when the working tree has uncommitted changes. Git errors are shown in a notification and logged to the **Minimal Git Explorer** output channel.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Git must be installed and available on `PATH`.
+- A workspace folder containing a Git repository.
 
-## Extension Settings
+## No configuration required
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+This extension works out of the box. There are no settings to configure.
 
-For example:
+## Design principles
 
-This extension contributes the following settings:
+- **Local-first** — all data comes from local `git` commands. No network calls, no accounts, no cloud APIs.
+- **Read-first** — safe exploration over mutation. Destructive actions are deferred to future versions.
+- **Small surface** — every feature maps to a common `git` command.
+- **No telemetry** — nothing is ever sent anywhere.
 
-- `myExtension.enable`: Enable/disable this extension.
-- `myExtension.thing`: Set to `blah` to do something.
+## Known limitations (v0.1.0)
 
-## Known Issues
+- Single-repository workspaces only. Multi-root workspaces use the first folder.
+- No auto-refresh. Use the toolbar refresh button after git operations.
+- Stash mutations limited to apply. Pop/drop deferred to v0.2.x.
+- No worktree creation/removal. Use the CLI for those.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## Release notes
 
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-- Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-- Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+See [CHANGELOG.md](CHANGELOG.md).
