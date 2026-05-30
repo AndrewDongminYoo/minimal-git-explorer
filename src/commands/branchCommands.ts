@@ -1,13 +1,12 @@
 import * as vscode from "vscode";
 import { GitService } from "../git/gitService";
 import { GitError } from "../utils/execGit";
-import { GitExplorerProvider } from "../views/gitExplorerProvider";
 import { BranchItem } from "../views/gitExplorerItems";
 
 export async function checkoutBranch(
   item: BranchItem,
   gitService: GitService,
-  provider: GitExplorerProvider,
+  provider: { refresh(): void },
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
   const branchName = item.branch.name;

@@ -1,3 +1,4 @@
+import * as path from "path";
 import * as vscode from "vscode";
 import { detectGitRoot } from "./git/repository";
 import { GitService } from "./git/gitService";
@@ -5,8 +6,24 @@ import {
   GIT_EXPLORER_SCHEME,
   GitExplorerContentProvider,
 } from "./utils/openTextDocument";
-import { GitExplorerProvider } from "./views/gitExplorerProvider";
+import {
+  BranchesProvider,
+  CommitsProvider,
+  RemotesProvider,
+  StashesProvider,
+  TagsProvider,
+  WorktreesProvider,
+} from "./views/sectionProviders";
 import { registerCommands } from "./commands/registerCommands";
+
+const VIEW_IDS = {
+  commits: "minimal-git-explorer.commits",
+  branches: "minimal-git-explorer.branches",
+  remotes: "minimal-git-explorer.remotes",
+  stashes: "minimal-git-explorer.stashes",
+  tags: "minimal-git-explorer.tags",
+  worktrees: "minimal-git-explorer.worktrees",
+} as const;
 
 export async function activate(
   context: vscode.ExtensionContext,
@@ -34,21 +51,71 @@ export async function activate(
     }
   }
 
-  const provider = new GitExplorerProvider(gitService);
-  const treeView = vscode.window.createTreeView(
-    "minimal-git-explorer.gitExplorer",
-    { treeDataProvider: provider, showCollapseAll: true },
-  );
-  context.subscriptions.push(treeView);
+  const commitsProvider = new CommitsProvider(gitService);
+  const branchesProvider = new BranchesProvider(gitService);
+  const remotesProvider = new RemotesProvider(gitService);
+  const stashesProvider = new StashesProvider(gitService);
+  const tagsProvider = new TagsProvider(gitService);
+  const worktreesProvider = new WorktreesProvider(gitService);
 
-  if (!gitService) {
-    treeView.message = "No Git repository found.";
+  const allProviders = [
+    commitsProvider,
+    branchesProvider,
+    remotesProvider,
+    stashesProvider,
+    tagsProvider,
+    worktreesProvider,
+  ];
+
+  const views = [
+    vscode.window.createTreeView(VIEW_IDS.commits, {
+      treeDataProvider: commitsProvider,
+      showCollapseAll: false,
+    }),
+    vscode.window.createTreeView(VIEW_IDS.branches, {
+      treeDataProvider: branchesProvider,
+      showCollapseAll: false,
+    }),
+    vscode.window.createTreeView(VIEW_IDS.remotes, {
+      treeDataProvider: remotesProvider,
+      showCollapseAll: false,
+    }),
+    vscode.window.createTreeView(VIEW_IDS.stashes, {
+      treeDataProvider: stashesProvider,
+      showCollapseAll: false,
+    }),
+    vscode.window.createTreeView(VIEW_IDS.tags, {
+      treeDataProvider: tagsProvider,
+      showCollapseAll: false,
+    }),
+    vscode.window.createTreeView(VIEW_IDS.worktrees, {
+      treeDataProvider: worktreesProvider,
+      showCollapseAll: false,
+    }),
+  ];
+
+  context.subscriptions.push(...views);
+
+  if (gitService) {
+    const userInfo = await gitService.getUserInfo();
+    if (userInfo) {
+      const repoName = path.basename(gitService.repoRoot);
+      const desc = `${repoName}  ·  ${userInfo.name}`;
+      views.forEach((v) => {
+        v.description = desc;
+      });
+    }
+  } else {
+    const noRepo = "No Git repository found";
+    views.forEach((v) => {
+      v.message = noRepo;
+    });
   }
 
   registerCommands(
     context,
     gitService,
-    provider,
+    allProviders,
     contentProvider,
     outputChannel,
   );

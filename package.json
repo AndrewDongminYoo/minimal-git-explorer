@@ -13,7 +13,8 @@
     "vscode": "^1.120.0"
   },
   "categories": [
-    "Source Control"
+    "Source Control",
+    "Other"
   ],
   "keywords": [
     "git",
@@ -30,8 +31,28 @@
     "views": {
       "scm": [
         {
-          "id": "minimal-git-explorer.gitExplorer",
-          "name": "Minimal Git Explorer"
+          "id": "minimal-git-explorer.commits",
+          "name": "Commits"
+        },
+        {
+          "id": "minimal-git-explorer.branches",
+          "name": "Branches"
+        },
+        {
+          "id": "minimal-git-explorer.remotes",
+          "name": "Remotes"
+        },
+        {
+          "id": "minimal-git-explorer.stashes",
+          "name": "Stashes"
+        },
+        {
+          "id": "minimal-git-explorer.tags",
+          "name": "Tags"
+        },
+        {
+          "id": "minimal-git-explorer.worktrees",
+          "name": "Worktrees"
         }
       ]
     },
@@ -82,44 +103,44 @@
       "view/title": [
         {
           "command": "minimal-git-explorer.refresh",
-          "when": "view == minimal-git-explorer.gitExplorer",
+          "when": "view =~ /^minimal-git-explorer\\./",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
           "command": "minimal-git-explorer.openCommit",
-          "when": "view == minimal-git-explorer.gitExplorer && viewItem == commit",
+          "when": "view == minimal-git-explorer.commits && viewItem == commit",
           "group": "1_commit"
         },
         {
           "command": "minimal-git-explorer.checkoutBranch",
-          "when": "view == minimal-git-explorer.gitExplorer && viewItem == branch",
+          "when": "view == minimal-git-explorer.branches && viewItem == branch",
           "group": "1_branch"
         },
         {
           "command": "minimal-git-explorer.copyRemoteUrl",
-          "when": "view == minimal-git-explorer.gitExplorer && viewItem == remoteUrl",
+          "when": "view == minimal-git-explorer.remotes && viewItem == remoteUrl",
           "group": "1_remote"
         },
         {
           "command": "minimal-git-explorer.showStash",
-          "when": "view == minimal-git-explorer.gitExplorer && viewItem == stash",
+          "when": "view == minimal-git-explorer.stashes && viewItem == stash",
           "group": "1_stash@1"
         },
         {
           "command": "minimal-git-explorer.applyStash",
-          "when": "view == minimal-git-explorer.gitExplorer && viewItem == stash",
+          "when": "view == minimal-git-explorer.stashes && viewItem == stash",
           "group": "1_stash@2"
         },
         {
           "command": "minimal-git-explorer.copyTagName",
-          "when": "view == minimal-git-explorer.gitExplorer && viewItem == tag",
+          "when": "view == minimal-git-explorer.tags && viewItem == tag",
           "group": "1_tag"
         },
         {
           "command": "minimal-git-explorer.openWorktree",
-          "when": "view == minimal-git-explorer.gitExplorer && viewItem == worktree",
+          "when": "view == minimal-git-explorer.worktrees && viewItem == worktree",
           "group": "1_worktree"
         }
       ]
@@ -148,7 +169,7 @@
     "esbuild": "^0.27.3",
     "eslint": "^9.39.3",
     "npm-run-all": "^4.1.5",
-    "typescript-eslint": "^8.56.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
   }
 }

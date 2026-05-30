@@ -31,13 +31,18 @@ export function parseCommits(stdout: string): GitCommit[] {
       if (t4 === -1) {
         return [];
       }
+      const t5 = line.indexOf("\t", t4 + 1);
+      if (t5 === -1) {
+        return [];
+      }
       return [
         {
           fullHash: line.slice(0, t1),
           shortHash: line.slice(t1 + 1, t2),
           author: line.slice(t2 + 1, t3),
-          relativeDate: line.slice(t3 + 1, t4),
-          subject: line.slice(t4 + 1),
+          authorEmail: line.slice(t3 + 1, t4),
+          relativeDate: line.slice(t4 + 1, t5),
+          subject: line.slice(t5 + 1),
         },
       ];
     });

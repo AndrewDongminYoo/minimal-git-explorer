@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { GitService } from "../git/gitService";
 import { GitExplorerContentProvider } from "../utils/openTextDocument";
-import { GitExplorerProvider } from "../views/gitExplorerProvider";
+import { SectionProvider } from "../views/sectionProviders";
 import {
   BranchItem,
   CommitItem,
@@ -20,13 +20,13 @@ import { openWorktree } from "./worktreeCommands";
 export function registerCommands(
   context: vscode.ExtensionContext,
   gitService: GitService | null,
-  provider: GitExplorerProvider,
+  providers: SectionProvider[],
   contentProvider: GitExplorerContentProvider,
   outputChannel: vscode.OutputChannel,
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("minimal-git-explorer.refresh", () =>
-      provider.refresh(),
+      providers.forEach((p) => p.refresh()),
     ),
 
     vscode.commands.registerCommand(
@@ -45,7 +45,15 @@ export function registerCommands(
         if (!gitService || !(item instanceof BranchItem)) {
           return;
         }
-        await checkoutBranch(item, gitService, provider, outputChannel);
+        const refreshBranches = providers.find(
+          (p) => p.constructor.name === "BranchesProvider",
+        );
+        await checkoutBranch(
+          item,
+          gitService,
+          { refresh: () => refreshBranches?.refresh() },
+          outputChannel,
+        );
       },
     ),
 
@@ -75,7 +83,15 @@ export function registerCommands(
         if (!gitService || !(item instanceof StashItem)) {
           return;
         }
-        await applyStash(item, gitService, provider, outputChannel);
+        const refreshStashes = providers.find(
+          (p) => p.constructor.name === "StashesProvider",
+        );
+        await applyStash(
+          item,
+          gitService,
+          { refresh: () => refreshStashes?.refresh() },
+          outputChannel,
+        );
       },
     ),
 

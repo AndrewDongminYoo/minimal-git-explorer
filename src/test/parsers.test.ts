@@ -12,26 +12,27 @@ import {
 suite("parseCommits", () => {
   test("parses a typical log line", () => {
     const stdout =
-      "abc1234def5678\tabc1234\tJohn Doe\t2 days ago\tfix: resolve null pointer";
+      "abc1234def5678\tabc1234\tJohn Doe\tjohn@example.com\t2 days ago\tfix: resolve null pointer";
     const [commit] = parseCommits(stdout);
     assert.strictEqual(commit.fullHash, "abc1234def5678");
     assert.strictEqual(commit.shortHash, "abc1234");
     assert.strictEqual(commit.author, "John Doe");
+    assert.strictEqual(commit.authorEmail, "john@example.com");
     assert.strictEqual(commit.relativeDate, "2 days ago");
     assert.strictEqual(commit.subject, "fix: resolve null pointer");
   });
 
   test("handles subject containing tabs", () => {
     const stdout =
-      "abc1234def5678\tabc1234\tJohn Doe\t2 days ago\tfix: tab\there";
+      "abc1234def5678\tabc1234\tJohn Doe\tjohn@example.com\t2 days ago\tfix: tab\there";
     const [commit] = parseCommits(stdout);
     assert.strictEqual(commit.subject, "fix: tab\there");
   });
 
   test("parses multiple lines", () => {
     const stdout = [
-      "aaa\ta1\tAlice\t1 day ago\tfirst",
-      "bbb\tb1\tBob\t2 days ago\tsecond",
+      "aaa\ta1\tAlice\talice@x.com\t1 day ago\tfirst",
+      "bbb\tb1\tBob\tbob@x.com\t2 days ago\tsecond",
     ].join("\n");
     const commits = parseCommits(stdout);
     assert.strictEqual(commits.length, 2);
@@ -45,7 +46,7 @@ suite("parseCommits", () => {
   });
 
   test("skips malformed lines", () => {
-    const stdout = "bad-line\naaa\ta1\tAlice\t1 day ago\tmessage";
+    const stdout = "bad-line\naaa\ta1\tAlice\talice@x.com\t1 day ago\tmessage";
     const commits = parseCommits(stdout);
     assert.strictEqual(commits.length, 1);
   });

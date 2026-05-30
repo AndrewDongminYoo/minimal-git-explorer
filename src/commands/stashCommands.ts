@@ -5,7 +5,6 @@ import {
   GitExplorerContentProvider,
   openReadonlyDocument,
 } from "../utils/openTextDocument";
-import { GitExplorerProvider } from "../views/gitExplorerProvider";
 import { StashItem } from "../views/gitExplorerItems";
 
 export async function showStash(
@@ -34,7 +33,7 @@ export async function showStash(
 export async function applyStash(
   item: StashItem,
   gitService: GitService,
-  provider: GitExplorerProvider,
+  provider: { refresh(): void },
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
   try {

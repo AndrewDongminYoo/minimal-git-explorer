@@ -2,8 +2,14 @@ export interface GitCommit {
   fullHash: string;
   shortHash: string;
   author: string;
+  authorEmail: string;
   relativeDate: string;
   subject: string;
+}
+
+export interface GitUserInfo {
+  name: string;
+  email: string;
 }
 
 export interface GitBranch {

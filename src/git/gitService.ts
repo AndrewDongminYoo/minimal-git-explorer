@@ -6,6 +6,7 @@ import {
   GitRemote,
   GitStash,
   GitTag,
+  GitUserInfo,
   GitWorktree,
 } from "./gitTypes";
 import {
@@ -26,7 +27,12 @@ export class GitService {
 
   async listCommits(): Promise<GitCommit[]> {
     return this.run(
-      ["log", "-n", "50", "--pretty=format:%H%x09%h%x09%an%x09%ar%x09%s"],
+      [
+        "log",
+        "-n",
+        "50",
+        "--pretty=format:%H%x09%h%x09%an%x09%ae%x09%ar%x09%s",
+      ],
       parseCommits,
     );
   }
@@ -95,6 +101,23 @@ export class GitService {
         this.outputChannel.appendLine(`[stash apply] ${err.stderr}`);
       }
       throw err;
+    }
+  }
+
+  async getUserInfo(): Promise<GitUserInfo | null> {
+    try {
+      const name = (
+        await execGit(["config", "user.name"], this.repoRoot)
+      ).trim();
+      const email = (
+        await execGit(["config", "user.email"], this.repoRoot)
+      ).trim();
+      if (!name) {
+        return null;
+      }
+      return { name, email };
+    } catch {
+      return null;
     }
   }
 
