@@ -1,2 +1,9 @@
 allowBuilds:
   esbuild: true
+
+# Migrated from the "pnpm.overrides" field in package.json, which pnpm 11 no
+# longer reads ("The pnpm field in package.json is no longer read by pnpm").
+overrides:
+  diff: ^8.0.3
+  serialize-javascript: ^7.0.5
+  shell-quote: ^1.9.0 # GHSA-395f-4hp3-45gv
