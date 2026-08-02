@@ -1,5 +1,5 @@
 allowBuilds:
-  '@vscode/vsce-sign': true # postinstall marks the bundled signing binary executable
+  "@vscode/vsce-sign": true # postinstall marks the bundled signing binary executable
   esbuild: true
   keytar: true # prebuild-install fetches a prebuilt binary; node-gyp is only the fallback
 
