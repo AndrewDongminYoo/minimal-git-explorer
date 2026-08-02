@@ -1,5 +1,7 @@
 allowBuilds:
+  '@vscode/vsce-sign': true # postinstall marks the bundled signing binary executable
   esbuild: true
+  keytar: true # prebuild-install fetches a prebuilt binary; node-gyp is only the fallback
 
 # Migrated from the "pnpm.overrides" field in package.json, which pnpm 11 no
 # longer reads ("The pnpm field in package.json is no longer read by pnpm").
