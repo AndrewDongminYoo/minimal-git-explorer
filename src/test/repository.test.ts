@@ -34,6 +34,19 @@ suite("findFirstGitRoot", () => {
     );
   });
 
+  test("skips a missing workspace folder before returning a later repository", async () => {
+    const missing = path.join(tempDir, "missing");
+    const repo = path.join(tempDir, "repo");
+
+    fs.mkdirSync(repo);
+    await git(["init"], repo);
+
+    assert.strictEqual(
+      await findFirstGitRoot([missing, repo]),
+      fs.realpathSync(repo),
+    );
+  });
+
   test("returns null when no workspace folder contains a Git repository", async () => {
     const first = path.join(tempDir, "first");
     const second = path.join(tempDir, "second");

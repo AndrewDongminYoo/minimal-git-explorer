@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { execGit, GitError } from "../utils/execGit";
 
 export async function detectGitRoot(
@@ -21,11 +22,33 @@ export async function findFirstGitRoot(
   workspaceFolders: string[],
 ): Promise<string | null> {
   for (const workspaceFolder of workspaceFolders) {
-    const repoRoot = await detectGitRoot(workspaceFolder);
-    if (repoRoot) {
-      return repoRoot;
+    try {
+      const repoRoot = await detectGitRoot(workspaceFolder);
+      if (repoRoot) {
+        return repoRoot;
+      }
+    } catch (error) {
+      if (
+        error instanceof GitError &&
+        error.systemCode === "ENOENT" &&
+        (await isMissingWorkspaceFolder(workspaceFolder))
+      ) {
+        continue;
+      }
+      throw error;
     }
   }
 
   return null;
+}
+
+async function isMissingWorkspaceFolder(
+  workspaceFolder: string,
+): Promise<boolean> {
+  try {
+    await fs.promises.stat(workspaceFolder);
+    return false;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "ENOENT";
+  }
 }

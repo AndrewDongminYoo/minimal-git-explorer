@@ -41,7 +41,7 @@ suite("RepositoryContext", () => {
     assert.strictEqual(repository.errorMessage, null);
   });
 
-  test("records repository detection errors separately from no repository", async () => {
+  test("treats a missing workspace folder as no repository", async () => {
     const repository = new RepositoryContext({
       appendLine: (line: string) => {
         output += `${line}\n`;
@@ -49,6 +49,30 @@ suite("RepositoryContext", () => {
     } as unknown as vscode.OutputChannel);
 
     await repository.rediscover([path.join(tempDir, "missing")]);
+
+    assert.strictEqual(repository.service, null);
+    assert.strictEqual(repository.errorMessage, null);
+    assert.strictEqual(output, "");
+  });
+
+  test("records a missing Git executable separately from no repository", async () => {
+    const repository = new RepositoryContext({
+      appendLine: (line: string) => {
+        output += `${line}\n`;
+      },
+    } as unknown as vscode.OutputChannel);
+    const originalPath = process.env.PATH;
+
+    try {
+      process.env.PATH = "";
+      await repository.rediscover([tempDir]);
+    } finally {
+      if (originalPath === undefined) {
+        delete process.env.PATH;
+      } else {
+        process.env.PATH = originalPath;
+      }
+    }
 
     assert.strictEqual(repository.service, null);
     assert.strictEqual(repository.errorMessage, "Git is unavailable");
