@@ -20,6 +20,7 @@ interface PackageManifest {
   engines?: { vscode?: string };
   homepage?: string;
   icon?: string;
+  repository?: { url?: string };
 }
 
 function readManifest(): PackageManifest {
@@ -86,12 +87,16 @@ suite("Extension manifest", () => {
     assert.strictEqual(manifest.engines?.vscode, "^1.125.0");
     assert.strictEqual(manifest.icon, "resources/icon.png");
     assert.strictEqual(
+      manifest.repository?.url,
+      "https://github.com/AndrewDongminYoo/minimal-git-explorer",
+    );
+    assert.strictEqual(
       manifest.homepage,
-      "https://github.com/dongminyu/minimal-git-explorer#readme",
+      "https://github.com/AndrewDongminYoo/minimal-git-explorer#readme",
     );
     assert.strictEqual(
       manifest.bugs?.url,
-      "https://github.com/dongminyu/minimal-git-explorer/issues",
+      "https://github.com/AndrewDongminYoo/minimal-git-explorer/issues",
     );
   });
 

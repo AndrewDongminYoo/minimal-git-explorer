@@ -5,7 +5,7 @@ This file provides contributor guidance for work in this repository.
 ## Project Overview
 
 Minimal Git Explorer is a lightweight VS Code extension that adds six local-first Git views to the Source Control sidebar.
-The current manifest version is `0.2.0`.
+The current manifest version is `0.3.0`.
 The extension has no accounts, telemetry, background indexing, or network API integration.
 
 ## Documentation Map
