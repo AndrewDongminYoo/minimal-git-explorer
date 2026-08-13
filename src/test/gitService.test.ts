@@ -90,10 +90,34 @@ suite("GitService integration", () => {
     const [stash] = await service.listStashes();
 
     const commitOutput = await service.showCommit(commit.fullHash);
-    const stashOutput = await service.showStash(stash.ref);
+    const stashOutput = await service.showStash(stash.objectId);
 
     assert.match(commitOutput, /initial commit/);
     assert.match(stashOutput, /README\.md/);
+  });
+
+  test("lists a shared stash only once with linked worktrees", async () => {
+    const linkedRoot = path.join(tempDir, "linked");
+    await git(["worktree", "add", linkedRoot, "feature/test"], repoRoot);
+
+    const stashes = await service.listStashes();
+
+    assert.strictEqual(stashes.length, 1);
+  });
+
+  test("applies the selected stash after reflog indices change", async () => {
+    const [captured] = await service.listStashes();
+    assert.ok(captured.objectId);
+
+    fs.writeFileSync(path.join(repoRoot, "README.md"), "newer\n");
+    await git(["stash", "push", "-m", "newer work"], repoRoot);
+
+    await service.applyStash(captured.objectId);
+
+    assert.strictEqual(
+      fs.readFileSync(path.join(repoRoot, "README.md"), "utf8"),
+      "changed\n",
+    );
   });
 
   test("detects dirty and clean working trees", async () => {

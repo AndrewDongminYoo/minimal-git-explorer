@@ -139,27 +139,51 @@ export function parseStashes(stdout: string): GitStash[] {
     .trim()
     .split("\n")
     .flatMap((line) => {
-      const refMatch = line.match(/^(stash@\{(\d+)\}):\s*/);
+      const firstTab = line.indexOf("\t");
+      const secondTab = line.indexOf("\t", firstTab + 1);
+      if (firstTab < 0 || secondTab < 0) {
+        return [];
+      }
+
+      const ref = line.slice(0, firstTab);
+      const refMatch = ref.match(/^stash@\{(\d+)\}$/);
       if (!refMatch) {
         return [];
       }
-      const ref = refMatch[1];
-      const index = parseInt(refMatch[2], 10);
-      const rest = line.slice(refMatch[0].length);
+      const index = parseInt(refMatch[1], 10);
+      const objectId = line.slice(firstTab + 1, secondTab);
+      if (!objectId) {
+        return [];
+      }
+      const rest = line.slice(secondTab + 1);
 
       const onMatch = rest.match(/^On ([^:]+):\s*(.*)/);
       if (onMatch) {
-        return [{ index, ref, branch: onMatch[1], message: onMatch[2] }];
+        return [
+          {
+            index,
+            ref,
+            objectId,
+            branch: onMatch[1],
+            message: onMatch[2],
+          },
+        ];
       }
 
       const wipMatch = rest.match(/^WIP on ([^:]+):\s*\S+\s*(.*)/);
       if (wipMatch) {
         return [
-          { index, ref, branch: wipMatch[1], message: wipMatch[2] || "WIP" },
+          {
+            index,
+            ref,
+            objectId,
+            branch: wipMatch[1],
+            message: wipMatch[2] || "WIP",
+          },
         ];
       }
 
-      return [{ index, ref, branch: "unknown", message: rest }];
+      return [{ index, ref, objectId, branch: "unknown", message: rest }];
     });
 }
 

@@ -14,10 +14,7 @@ export async function showStash(
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
   try {
-    const output = await gitService.showStash(
-      item.stash.ref,
-      item.stash.worktreePath,
-    );
+    const output = await gitService.showStash(item.stash.objectId);
     const uri = contentProvider.create(
       output,
       `stash-${item.stash.index}.diff`,
@@ -39,8 +36,7 @@ export async function applyStash(
   provider: { refresh(): void },
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
-  const stashCwd = item.stash.worktreePath;
-  const dirty = await gitService.isDirty(stashCwd);
+  const dirty = await gitService.isDirty();
   if (dirty) {
     const choice = await vscode.window.showWarningMessage(
       `Working tree has uncommitted changes. Apply ${item.stash.ref} anyway?`,
@@ -53,7 +49,7 @@ export async function applyStash(
   }
 
   try {
-    await gitService.applyStash(item.stash.ref, stashCwd);
+    await gitService.applyStash(item.stash.objectId);
     provider.refresh();
     vscode.window.showInformationMessage(`Applied ${item.stash.ref}`);
   } catch (err) {

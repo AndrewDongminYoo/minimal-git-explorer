@@ -57,28 +57,10 @@ export class GitService {
   }
 
   async listStashes(): Promise<GitStash[]> {
-    const worktrees = await this.listWorktrees();
-    const allStashes: GitStash[] = [];
-
-    for (const wt of worktrees) {
-      try {
-        const stdout = await execGit(
-          ["stash", "list", "--format=%gd: %gs"],
-          wt.path,
-        );
-        const stashes = parseStashes(stdout);
-        const isLinked = wt.path !== this.repoRoot;
-        for (const stash of stashes) {
-          allStashes.push(
-            isLinked ? { ...stash, worktreePath: wt.path } : stash,
-          );
-        }
-      } catch {
-        // Worktree has no stash ref — skip silently
-      }
-    }
-
-    return allStashes;
+    return this.run(
+      ["stash", "list", "--format=%gd%x09%H%x09%gs"],
+      parseStashes,
+    );
   }
 
   async listTags(): Promise<GitTag[]> {
@@ -106,8 +88,8 @@ export class GitService {
     return execGit(["show", "--stat", "--patch", fullHash], this.repoRoot);
   }
 
-  async showStash(ref: string, cwd?: string): Promise<string> {
-    return execGit(["stash", "show", "-p", ref], cwd ?? this.repoRoot);
+  async showStash(objectId: string): Promise<string> {
+    return execGit(["stash", "show", "-p", objectId], this.repoRoot);
   }
 
   async checkoutBranch(branchName: string): Promise<void> {
@@ -121,9 +103,9 @@ export class GitService {
     }
   }
 
-  async applyStash(ref: string, cwd?: string): Promise<void> {
+  async applyStash(objectId: string): Promise<void> {
     try {
-      await execGit(["stash", "apply", ref], cwd ?? this.repoRoot);
+      await execGit(["stash", "apply", objectId], this.repoRoot);
     } catch (err) {
       if (err instanceof GitError) {
         this.outputChannel.appendLine(`[stash apply] ${err.stderr}`);

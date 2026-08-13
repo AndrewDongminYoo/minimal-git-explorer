@@ -126,8 +126,25 @@ suite("parseRemotes", () => {
 });
 
 suite("parseStashes", () => {
+  test("preserves the stash object ID as an immutable action identity", () => {
+    const objectId = "0123456789abcdef0123456789abcdef01234567";
+    const stashes = parseStashes(
+      `stash@{0}\t${objectId}\tOn main: my saved work`,
+    );
+
+    assert.deepStrictEqual(stashes, [
+      {
+        index: 0,
+        ref: "stash@{0}",
+        objectId,
+        branch: "main",
+        message: "my saved work",
+      },
+    ]);
+  });
+
   test('parses "On branch:" format', () => {
-    const stdout = "stash@{0}: On main: my saved work";
+    const stdout = "stash@{0}\tobject-0\tOn main: my saved work";
     const [stash] = parseStashes(stdout);
     assert.strictEqual(stash.index, 0);
     assert.strictEqual(stash.ref, "stash@{0}");
@@ -136,7 +153,8 @@ suite("parseStashes", () => {
   });
 
   test('parses "WIP on branch:" format', () => {
-    const stdout = "stash@{1}: WIP on feature/xyz: abc1234 some commit";
+    const stdout =
+      "stash@{1}\tobject-1\tWIP on feature/xyz: abc1234 some commit";
     const [stash] = parseStashes(stdout);
     assert.strictEqual(stash.index, 1);
     assert.strictEqual(stash.branch, "feature/xyz");
@@ -145,8 +163,8 @@ suite("parseStashes", () => {
 
   test("parses multiple stashes", () => {
     const stdout = [
-      "stash@{0}: On main: first",
-      "stash@{1}: On main: second",
+      "stash@{0}\tobject-0\tOn main: first",
+      "stash@{1}\tobject-1\tOn main: second",
     ].join("\n");
     const stashes = parseStashes(stdout);
     assert.strictEqual(stashes.length, 2);
