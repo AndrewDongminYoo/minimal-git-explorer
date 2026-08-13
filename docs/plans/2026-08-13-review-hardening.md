@@ -429,7 +429,7 @@ git commit -m "fix(extension): refresh repository state safely"
 **Interfaces:**
 
 - Consumes: the existing `pnpm test`, `pnpm run package`, and `pnpm run vsix` scripts.
-- Produces: `VSCODE_TEST_VERSION` selection, explicit Workspace Trust metadata, and CI coverage for VS Code `1.74.0` and `stable`.
+- Produces: `VSCODE_TEST_VERSION` selection, explicit Workspace Trust metadata, and CI coverage for VS Code `1.125.0` and `stable`.
 
 - [ ] **Step 1: Add failing manifest capability coverage and repair the stale category expectation**
 
@@ -496,7 +496,7 @@ Expected: `package.json` and `pnpm-lock.yaml` resolve the updated test runner wi
 
 - [ ] **Step 5: Add the CI workflow**
 
-Create `.github/workflows/ci.yml` with one quality job that runs `pnpm run package` and `pnpm run vsix`, plus a test matrix job that runs `xvfb-run -a pnpm test` with `VSCODE_TEST_VERSION` set to `1.74.0` and `stable`.
+Create `.github/workflows/ci.yml` with one quality job that runs `pnpm run package` and `pnpm run vsix`, plus a test matrix job that runs `xvfb-run -a pnpm test` with `VSCODE_TEST_VERSION` set to `1.125.0` and `stable`.
 
 Use Node.js `22`, Corepack, the repository's `packageManager` pnpm pin, `actions/checkout@v4`, and `actions/setup-node@v4`.
 
@@ -505,7 +505,7 @@ Use Node.js `22`, Corepack, the repository's `packageManager` pnpm pin, `actions
 Run:
 
 ```bash
-VSCODE_TEST_VERSION=1.74.0 pnpm test
+VSCODE_TEST_VERSION=1.125.0 pnpm test
 VSCODE_TEST_VERSION=stable pnpm test
 pnpm run package
 pnpm run vsix
@@ -625,7 +625,7 @@ Run:
 pnpm install --frozen-lockfile
 pnpm run check-types
 pnpm run lint
-VSCODE_TEST_VERSION=1.74.0 pnpm test
+VSCODE_TEST_VERSION=1.125.0 pnpm test
 VSCODE_TEST_VERSION=stable pnpm test
 pnpm run package
 pnpm run vsix

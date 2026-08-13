@@ -181,7 +181,7 @@ pnpm run package
 pnpm run vsix
 ```
 
-CI will exercise both VS Code `1.74.0`, the declared minimum, and the current stable channel.
+CI will exercise both VS Code `1.125.0`, the declared minimum, and the current stable channel.
 
 The VSIX file list will be inspected to ensure only runtime assets and user-facing documentation are packaged.
 

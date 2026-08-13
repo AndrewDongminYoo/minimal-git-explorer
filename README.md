@@ -41,7 +41,7 @@ Checkout and stash apply ask for confirmation when the working tree has uncommit
 ## Requirements
 
 - Git must be installed and available on `PATH`.
-- VS Code 1.74.0 or newer.
+- VS Code 1.125.0 or newer.
 - An open workspace folder. If you run `git init` after opening it, use Refresh to discover the new repository.
 
 ## No configuration required

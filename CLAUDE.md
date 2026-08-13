@@ -41,7 +41,7 @@ pnpm run lint
 pnpm test
 
 # Run the supported-version test matrix locally
-VSCODE_TEST_VERSION=1.74.0 pnpm test
+VSCODE_TEST_VERSION=1.125.0 pnpm test
 VSCODE_TEST_VERSION=stable pnpm test
 
 # Build the production bundle and package a VSIX
@@ -50,7 +50,7 @@ pnpm run vsix
 ```
 
 Tests live in `src/test/` and compile to `out/test/`.
-The test configuration is in `.vscode-test.mjs`, and CI runs VS Code `1.74.0` plus `stable`.
+The test configuration is in `.vscode-test.mjs`, and CI runs VS Code `1.125.0` plus `stable`.
 
 ## Architecture
 
