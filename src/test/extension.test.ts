@@ -103,5 +103,6 @@ suite("Extension activation", () => {
     );
     await extension.activate();
     assert.strictEqual(extension.isActive, true);
+    await vscode.commands.executeCommand("minimal-git-explorer.refresh");
   });
 });

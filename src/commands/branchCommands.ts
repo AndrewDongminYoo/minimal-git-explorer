@@ -6,7 +6,7 @@ import { BranchItem } from "../views/gitExplorerItems";
 export async function checkoutBranch(
   item: BranchItem,
   gitService: GitService,
-  provider: { refresh(): void },
+  provider: { refresh(): void | Promise<void> },
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
   const branchName = item.branch.name;
@@ -29,7 +29,7 @@ export async function checkoutBranch(
     }
 
     await gitService.checkoutBranch(branchName);
-    provider.refresh();
+    await provider.refresh();
   } catch (err) {
     if (err instanceof GitError) {
       outputChannel.appendLine(`[checkout] ${formatGitError(err)}`);

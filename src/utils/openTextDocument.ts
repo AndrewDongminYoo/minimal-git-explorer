@@ -22,6 +22,10 @@ export class GitExplorerContentProvider
     this._store.set(uri.toString(), content);
     return uri;
   }
+
+  remove(uri: vscode.Uri): void {
+    this._store.delete(uri.toString());
+  }
 }
 
 export async function openReadonlyDocument(

@@ -18,6 +18,7 @@ export type GitExplorerItem =
   | StashItem
   | TagItem
   | WorktreeItem
+  | ErrorItem
   | EmptyItem;
 
 export class CommitItem extends vscode.TreeItem {
@@ -228,6 +229,14 @@ export class EmptyItem extends vscode.TreeItem {
     super(message, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("info");
     this.contextValue = "empty";
+  }
+}
+
+export class ErrorItem extends vscode.TreeItem {
+  constructor(message: string) {
+    super(message, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("error");
+    this.contextValue = "error";
   }
 }
 

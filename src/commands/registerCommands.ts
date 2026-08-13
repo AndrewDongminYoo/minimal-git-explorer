@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
-import { GitService } from "../git/gitService";
+import { RepositoryServiceAccessor } from "../git/repositoryContext";
 import { GitExplorerContentProvider } from "../utils/openTextDocument";
-import { SectionProvider } from "../views/sectionProviders";
 import {
   BranchItem,
   CommitItem,
@@ -19,21 +18,22 @@ import { openWorktree } from "./worktreeCommands";
 
 export function registerCommands(
   context: vscode.ExtensionContext,
-  gitService: GitService | null,
-  providers: SectionProvider[],
+  repository: RepositoryServiceAccessor,
+  refreshAll: () => Promise<void>,
   contentProvider: GitExplorerContentProvider,
   outputChannel: vscode.OutputChannel,
 ): void {
-  const refreshAll = { refresh: () => providers.forEach((p) => p.refresh()) };
+  const refreshProvider = { refresh: refreshAll };
 
   context.subscriptions.push(
     vscode.commands.registerCommand("minimal-git-explorer.refresh", () =>
-      providers.forEach((p) => p.refresh()),
+      refreshAll(),
     ),
 
     vscode.commands.registerCommand(
       "minimal-git-explorer.openCommit",
       async (item: CommitItem) => {
+        const gitService = repository.service;
         if (!gitService || !(item instanceof CommitItem)) {
           return;
         }
@@ -44,10 +44,11 @@ export function registerCommands(
     vscode.commands.registerCommand(
       "minimal-git-explorer.checkoutBranch",
       async (item: BranchItem) => {
+        const gitService = repository.service;
         if (!gitService || !(item instanceof BranchItem)) {
           return;
         }
-        await checkoutBranch(item, gitService, refreshAll, outputChannel);
+        await checkoutBranch(item, gitService, refreshProvider, outputChannel);
       },
     ),
 
@@ -64,6 +65,7 @@ export function registerCommands(
     vscode.commands.registerCommand(
       "minimal-git-explorer.showStash",
       async (item: StashItem) => {
+        const gitService = repository.service;
         if (!gitService || !(item instanceof StashItem)) {
           return;
         }
@@ -74,10 +76,11 @@ export function registerCommands(
     vscode.commands.registerCommand(
       "minimal-git-explorer.applyStash",
       async (item: StashItem) => {
+        const gitService = repository.service;
         if (!gitService || !(item instanceof StashItem)) {
           return;
         }
-        await applyStash(item, gitService, refreshAll, outputChannel);
+        await applyStash(item, gitService, refreshProvider, outputChannel);
       },
     ),
 

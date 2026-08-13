@@ -33,7 +33,7 @@ export async function showStash(
 export async function applyStash(
   item: StashItem,
   gitService: GitService,
-  provider: { refresh(): void },
+  provider: { refresh(): void | Promise<void> },
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
   try {
@@ -50,7 +50,7 @@ export async function applyStash(
     }
 
     await gitService.applyStash(item.stash.objectId);
-    provider.refresh();
+    await provider.refresh();
     vscode.window.showInformationMessage(`Applied ${item.stash.ref}`);
   } catch (err) {
     if (err instanceof GitError) {

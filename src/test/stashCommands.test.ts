@@ -64,9 +64,18 @@ suite("applyStash", () => {
       value: async () => undefined,
     });
 
-    await applyStash(item, gitService, { refresh: () => (refreshed = true) }, {
-      appendLine: () => undefined,
-    } as unknown as vscode.OutputChannel);
+    await applyStash(
+      item,
+      gitService,
+      {
+        refresh: () => {
+          refreshed = true;
+        },
+      },
+      {
+        appendLine: () => undefined,
+      } as unknown as vscode.OutputChannel,
+    );
 
     assert.strictEqual(applied, false);
     assert.strictEqual(refreshed, false);
@@ -146,9 +155,18 @@ suite("applyStash", () => {
       value: async () => undefined,
     });
 
-    await applyStash(item, gitService, { refresh: () => (refreshed = true) }, {
-      appendLine: () => undefined,
-    } as unknown as vscode.OutputChannel);
+    await applyStash(
+      item,
+      gitService,
+      {
+        refresh: () => {
+          refreshed = true;
+        },
+      },
+      {
+        appendLine: () => undefined,
+      } as unknown as vscode.OutputChannel,
+    );
 
     assert.strictEqual(appliedIdentity, objectId);
     assert.strictEqual(refreshed, true);
