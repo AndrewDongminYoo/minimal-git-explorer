@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { GitService } from "../git/gitService";
-import { GitError } from "../utils/execGit";
+import { formatGitError, GitError } from "../utils/execGit";
 import {
   GitExplorerContentProvider,
   openReadonlyDocument,
@@ -22,7 +22,7 @@ export async function showStash(
     await openReadonlyDocument(uri);
   } catch (err) {
     if (err instanceof GitError) {
-      outputChannel.appendLine(`[stash show] ${err.stderr}`);
+      outputChannel.appendLine(`[stash show] ${formatGitError(err)}`);
       vscode.window.showErrorMessage(
         "Failed to show stash. See the Minimal Git Explorer output for details.",
       );
@@ -36,25 +36,25 @@ export async function applyStash(
   provider: { refresh(): void },
   outputChannel: vscode.OutputChannel,
 ): Promise<void> {
-  const dirty = await gitService.isDirty();
-  if (dirty) {
-    const choice = await vscode.window.showWarningMessage(
-      `Working tree has uncommitted changes. Apply ${item.stash.ref} anyway?`,
-      { modal: true },
-      "Apply Stash",
-    );
-    if (choice !== "Apply Stash") {
-      return;
-    }
-  }
-
   try {
+    const dirty = await gitService.isDirty();
+    if (dirty) {
+      const choice = await vscode.window.showWarningMessage(
+        `Working tree has uncommitted changes. Apply ${item.stash.ref} anyway?`,
+        { modal: true },
+        "Apply Stash",
+      );
+      if (choice !== "Apply Stash") {
+        return;
+      }
+    }
+
     await gitService.applyStash(item.stash.objectId);
     provider.refresh();
     vscode.window.showInformationMessage(`Applied ${item.stash.ref}`);
   } catch (err) {
     if (err instanceof GitError) {
-      outputChannel.appendLine(`[stash apply] ${err.stderr}`);
+      outputChannel.appendLine(`[stash apply] ${formatGitError(err)}`);
       vscode.window.showErrorMessage(
         "Failed to apply stash. See the Minimal Git Explorer output for details.",
       );

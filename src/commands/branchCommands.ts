@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { GitService } from "../git/gitService";
-import { GitError } from "../utils/execGit";
+import { formatGitError, GitError } from "../utils/execGit";
 import { BranchItem } from "../views/gitExplorerItems";
 
 export async function checkoutBranch(
@@ -15,24 +15,24 @@ export async function checkoutBranch(
     return;
   }
 
-  const dirty = await gitService.isDirty();
-  if (dirty) {
-    const choice = await vscode.window.showWarningMessage(
-      `Working tree has uncommitted changes. Checkout "${branchName}" anyway?`,
-      { modal: true },
-      "Checkout",
-    );
-    if (choice !== "Checkout") {
-      return;
-    }
-  }
-
   try {
+    const dirty = await gitService.isDirty();
+    if (dirty) {
+      const choice = await vscode.window.showWarningMessage(
+        `Working tree has uncommitted changes. Checkout "${branchName}" anyway?`,
+        { modal: true },
+        "Checkout",
+      );
+      if (choice !== "Checkout") {
+        return;
+      }
+    }
+
     await gitService.checkoutBranch(branchName);
     provider.refresh();
   } catch (err) {
     if (err instanceof GitError) {
-      outputChannel.appendLine(`[checkout] ${err.stderr}`);
+      outputChannel.appendLine(`[checkout] ${formatGitError(err)}`);
       vscode.window.showErrorMessage(
         `Failed to checkout "${branchName}". See the Minimal Git Explorer output for details.`,
       );

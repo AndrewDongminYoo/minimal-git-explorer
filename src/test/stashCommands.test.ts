@@ -153,4 +153,50 @@ suite("applyStash", () => {
     assert.strictEqual(appliedIdentity, objectId);
     assert.strictEqual(refreshed, true);
   });
+
+  test("does not mutate when the dirty-state check fails", async () => {
+    let applied = false;
+    let errorMessage = "";
+    let output = "";
+
+    const gitService = {
+      isDirty: async () => {
+        throw new GitError("spawn git ENOENT", ["status"], "", 1);
+      },
+      applyStash: async () => {
+        applied = true;
+      },
+    } as unknown as GitService;
+
+    const item = {
+      stash: {
+        index: 0,
+        ref: "stash@{0}",
+        objectId: "object-0",
+        branch: "main",
+        message: "saved work",
+      },
+    } as StashItem;
+
+    Object.defineProperty(vscode.window, "showErrorMessage", {
+      configurable: true,
+      value: async (message: string) => {
+        errorMessage = message;
+        return undefined;
+      },
+    });
+
+    await applyStash(item, gitService, { refresh: () => undefined }, {
+      appendLine: (line: string) => {
+        output += `${line}\n`;
+      },
+    } as unknown as vscode.OutputChannel);
+
+    assert.strictEqual(applied, false);
+    assert.match(output, /spawn git ENOENT/);
+    assert.strictEqual(
+      errorMessage,
+      "Failed to apply stash. See the Minimal Git Explorer output for details.",
+    );
+  });
 });

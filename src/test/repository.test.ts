@@ -4,7 +4,8 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { promisify } from "util";
-import { findFirstGitRoot } from "../git/repository";
+import { detectGitRoot, findFirstGitRoot } from "../git/repository";
+import { GitError } from "../utils/execGit";
 
 const execFileAsync = promisify(execFile);
 
@@ -41,6 +42,16 @@ suite("findFirstGitRoot", () => {
     fs.mkdirSync(second);
 
     assert.strictEqual(await findFirstGitRoot([first, second]), null);
+  });
+
+  test("rethrows repository detection process failures", async () => {
+    const missingRoot = path.join(tempDir, "missing");
+
+    await assert.rejects(
+      () => detectGitRoot(missingRoot),
+      (error: unknown) =>
+        error instanceof GitError && error.systemCode === "ENOENT",
+    );
   });
 });
 

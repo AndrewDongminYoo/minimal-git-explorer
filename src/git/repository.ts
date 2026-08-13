@@ -10,10 +10,10 @@ export async function detectGitRoot(
     );
     return result.trim() || null;
   } catch (err) {
-    if (err instanceof GitError) {
+    if (err instanceof GitError && !err.systemCode) {
       return null;
     }
-    return null;
+    throw err;
   }
 }
 

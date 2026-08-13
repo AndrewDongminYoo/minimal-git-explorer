@@ -6,6 +6,7 @@ import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
 import { GitService } from "../git/gitService";
+import { GitError } from "../utils/execGit";
 
 const execFileAsync = promisify(execFile);
 
@@ -126,6 +127,19 @@ suite("GitService integration", () => {
     fs.writeFileSync(path.join(repoRoot, "dirty.txt"), "dirty\n");
 
     assert.strictEqual(await service.isDirty(), true);
+  });
+
+  test("rejects read and dirty-state failures with useful diagnostics", async () => {
+    const missingRoot = path.join(tempDir, "missing");
+    const missingService = new GitService(missingRoot, {
+      appendLine: (line: string) => {
+        output += `${line}\n`;
+      },
+    } as unknown as vscode.OutputChannel);
+
+    await assert.rejects(() => missingService.listCommits(), GitError);
+    await assert.rejects(() => missingService.isDirty(), GitError);
+    assert.match(output, /ENOENT/);
   });
 });
 

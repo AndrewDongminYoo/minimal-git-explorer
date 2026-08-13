@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { execGit, GitError } from "../utils/execGit";
+import { execGit, formatGitError, GitError } from "../utils/execGit";
 import {
   GitBranch,
   GitCommit,
@@ -46,7 +46,11 @@ export class GitService {
       parseLocalBranches,
     );
     const remote = await this.run(
-      ["branch", "-r", "--format=%(refname:short)%09%(objectname:short)"],
+      [
+        "branch",
+        "-r",
+        "--format=%(refname:short)%09%(objectname:short)%09%(symref)",
+      ],
       parseRemoteBranches,
     );
     return [...local, ...remote];
@@ -69,7 +73,7 @@ export class GitService {
   }
 
   async listWorktrees(): Promise<GitWorktree[]> {
-    return this.run(["worktree", "list", "--porcelain"], parseWorktrees);
+    return this.run(["worktree", "list", "--porcelain", "-z"], parseWorktrees);
   }
 
   async isDirty(cwd = this.repoRoot): Promise<boolean> {
@@ -78,9 +82,11 @@ export class GitService {
       return stdout.trim().length > 0;
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[git status --porcelain] ${err.stderr}`);
+        this.outputChannel.appendLine(
+          `[git status --porcelain] ${formatGitError(err)}`,
+        );
       }
-      return false;
+      throw err;
     }
   }
 
@@ -97,7 +103,7 @@ export class GitService {
       await execGit(["checkout", branchName], this.repoRoot);
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[checkout] ${err.stderr}`);
+        this.outputChannel.appendLine(`[checkout] ${formatGitError(err)}`);
       }
       throw err;
     }
@@ -108,7 +114,7 @@ export class GitService {
       await execGit(["stash", "apply", objectId], this.repoRoot);
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[stash apply] ${err.stderr}`);
+        this.outputChannel.appendLine(`[stash apply] ${formatGitError(err)}`);
       }
       throw err;
     }
@@ -140,9 +146,11 @@ export class GitService {
       return parser(stdout);
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[git ${args.join(" ")}] ${err.stderr}`);
+        this.outputChannel.appendLine(
+          `[git ${args.join(" ")}] ${formatGitError(err)}`,
+        );
       }
-      return parser("");
+      throw err;
     }
   }
 }
