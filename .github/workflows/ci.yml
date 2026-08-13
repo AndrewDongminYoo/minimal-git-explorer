@@ -1,22 +1,27 @@
 name: CI
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch: {}
+  pull_request: { branches: [main] }
+  push: { branches: [main] }
 
 permissions:
   contents: read
+
+env:
+  # Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 22
+          node-version: 24
       - name: Enable Corepack
         run: corepack enable
       - name: Install dependencies
@@ -38,11 +43,11 @@ jobs:
       VSCODE_TEST_VERSION: ${{ matrix.vscode-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 22
+          node-version: 24
       - name: Enable Corepack
         run: corepack enable
       - name: Install dependencies
