@@ -3,6 +3,7 @@
   "displayName": "Minimal Git Explorer",
   "description": "A lightweight local-first Git explorer for commits, branches, remotes, stashes, tags, and worktrees in the VS Code Source Control sidebar.",
   "version": "0.2.0",
+  "packageManager": "pnpm@11.21.0",
   "publisher": "dongminyu",
   "license": "MIT",
   "icon": "resources/icon.png",
@@ -31,6 +32,12 @@
     "tags"
   ],
   "activationEvents": [],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Local Git commands and Git hooks run only after the workspace is trusted."
+    }
+  },
   "main": "./dist/extension.js",
   "contributes": {
     "views": {
@@ -176,8 +183,8 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.74.0",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.9.1",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
