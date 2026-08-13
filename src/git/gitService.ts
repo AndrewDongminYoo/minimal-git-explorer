@@ -26,6 +26,26 @@ export class GitService {
   ) {}
 
   async listCommits(): Promise<GitCommit[]> {
+    const verifyHeadArgs = ["rev-parse", "--verify", "--quiet", "HEAD"];
+    try {
+      await execGit(verifyHeadArgs, this.repoRoot);
+    } catch (err) {
+      if (
+        err instanceof GitError &&
+        err.exitCode === 1 &&
+        err.systemCode === undefined &&
+        err.stderr.trim() === ""
+      ) {
+        return [];
+      }
+      if (err instanceof GitError) {
+        this.outputChannel.appendLine(
+          `[git ${verifyHeadArgs.join(" ")}] ${formatGitError(err)}`,
+        );
+      }
+      throw err;
+    }
+
     return this.run(
       [
         "log",

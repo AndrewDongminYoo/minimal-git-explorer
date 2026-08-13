@@ -106,6 +106,22 @@ suite("GitService integration", () => {
     assert.strictEqual(stashes.length, 1);
   });
 
+  test("treats an unborn HEAD as an empty commit list", async () => {
+    const unbornRoot = path.join(tempDir, "unborn");
+    fs.mkdirSync(unbornRoot);
+    await git(["init"], unbornRoot);
+    const unbornService = new GitService(unbornRoot, {
+      appendLine: (line: string) => {
+        output += `${line}\n`;
+      },
+    } as unknown as vscode.OutputChannel);
+
+    const commits = await unbornService.listCommits();
+
+    assert.deepStrictEqual(commits, []);
+    assert.strictEqual(output, "");
+  });
+
   test("applies the selected stash after reflog indices change", async () => {
     const [captured] = await service.listStashes();
     assert.ok(captured.objectId);
