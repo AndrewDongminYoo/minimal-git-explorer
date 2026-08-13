@@ -1,5 +1,8 @@
 # Minimal Git Explorer - Release Plan
 
+> Historical document: this is the completed `0.1.0` product and implementation plan.
+> Current production contracts live in `docs/specs/`; future roadmap items below remain unimplemented unless the current source and changelog say otherwise.
+
 ## Product Goal
 
 Minimal Git Explorer is a lightweight VS Code extension that adds a focused Git explorer to the Source Control sidebar.
@@ -478,6 +481,9 @@ src/
 
 ## Phase 1: Basic View
 
+**Historical status:** Completed for `0.1.0`.
+The original single-view concept was superseded in `0.2.0` by six independent SCM TreeViews.
+
 Goal:
 
 ```text
@@ -504,6 +510,8 @@ Definition of Done:
 ```
 
 ## Phase 2: Git Service
+
+**Historical status:** Completed for `0.1.0` and subsequently hardened.
 
 Goal:
 
@@ -534,6 +542,9 @@ Definition of Done:
 
 ## Phase 3: Tree Data Rendering
 
+**Historical status:** Completed for `0.1.0`.
+The original single-tree provider described below was superseded in `0.2.0` by six providers in `src/views/sectionProviders.ts`.
+
 Goal:
 
 ```text
@@ -562,6 +573,8 @@ Definition of Done:
 
 ## Phase 4: Read Actions
 
+**Historical status:** Completed for `0.1.0`.
+
 Goal:
 
 ```text
@@ -586,6 +599,8 @@ Definition of Done:
 ```
 
 ## Phase 5: Minimal Mutations
+
+**Historical status:** Completed for `0.1.0` and subsequently hardened to fail closed on dirty-state errors.
 
 Goal:
 

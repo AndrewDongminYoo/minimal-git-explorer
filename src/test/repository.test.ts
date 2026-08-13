@@ -4,7 +4,8 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { promisify } from "util";
-import { findFirstGitRoot } from "../git/repository";
+import { detectGitRoot, findFirstGitRoot } from "../git/repository";
+import { GitError } from "../utils/execGit";
 
 const execFileAsync = promisify(execFile);
 
@@ -33,6 +34,19 @@ suite("findFirstGitRoot", () => {
     );
   });
 
+  test("skips a missing workspace folder before returning a later repository", async () => {
+    const missing = path.join(tempDir, "missing");
+    const repo = path.join(tempDir, "repo");
+
+    fs.mkdirSync(repo);
+    await git(["init"], repo);
+
+    assert.strictEqual(
+      await findFirstGitRoot([missing, repo]),
+      fs.realpathSync(repo),
+    );
+  });
+
   test("returns null when no workspace folder contains a Git repository", async () => {
     const first = path.join(tempDir, "first");
     const second = path.join(tempDir, "second");
@@ -41,6 +55,16 @@ suite("findFirstGitRoot", () => {
     fs.mkdirSync(second);
 
     assert.strictEqual(await findFirstGitRoot([first, second]), null);
+  });
+
+  test("rethrows repository detection process failures", async () => {
+    const missingRoot = path.join(tempDir, "missing");
+
+    await assert.rejects(
+      () => detectGitRoot(missingRoot),
+      (error: unknown) =>
+        error instanceof GitError && error.systemCode === "ENOENT",
+    );
   });
 });
 

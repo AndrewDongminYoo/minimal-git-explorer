@@ -29,9 +29,9 @@ export interface GitRemote {
 export interface GitStash {
   index: number;
   ref: string;
+  objectId: string;
   branch: string;
   message: string;
-  worktreePath?: string;
 }
 
 export interface GitTag {

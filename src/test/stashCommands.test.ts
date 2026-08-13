@@ -31,13 +31,13 @@ suite("applyStash", () => {
     });
   });
 
-  test("does not apply to a dirty worktree when confirmation is cancelled", async () => {
+  test("does not apply to a dirty working tree when confirmation is cancelled", async () => {
     let applied = false;
     let refreshed = false;
 
     const gitService = {
       isDirty: async (cwd?: string) => {
-        assert.strictEqual(cwd, "/tmp/project-linked");
+        assert.strictEqual(cwd, undefined);
         return true;
       },
       applyStash: async () => {
@@ -49,9 +49,9 @@ suite("applyStash", () => {
       stash: {
         index: 0,
         ref: "stash@{0}",
+        objectId: "object-0",
         branch: "main",
         message: "saved work",
-        worktreePath: "/tmp/project-linked",
       },
     } as StashItem;
 
@@ -64,9 +64,18 @@ suite("applyStash", () => {
       value: async () => undefined,
     });
 
-    await applyStash(item, gitService, { refresh: () => (refreshed = true) }, {
-      appendLine: () => undefined,
-    } as unknown as vscode.OutputChannel);
+    await applyStash(
+      item,
+      gitService,
+      {
+        refresh: () => {
+          refreshed = true;
+        },
+      },
+      {
+        appendLine: () => undefined,
+      } as unknown as vscode.OutputChannel,
+    );
 
     assert.strictEqual(applied, false);
     assert.strictEqual(refreshed, false);
@@ -92,6 +101,7 @@ suite("applyStash", () => {
       stash: {
         index: 0,
         ref: "stash@{0}",
+        objectId: "object-0",
         branch: "main",
         message: "saved work",
       },
@@ -112,6 +122,96 @@ suite("applyStash", () => {
     } as unknown as vscode.OutputChannel);
 
     assert.match(output, /fatal: local changes would be overwritten/);
+    assert.strictEqual(
+      errorMessage,
+      "Failed to apply stash. See the Minimal Git Explorer output for details.",
+    );
+  });
+
+  test("applies a stash by immutable object ID", async () => {
+    let appliedIdentity = "";
+    let refreshed = false;
+    const objectId = "0123456789abcdef0123456789abcdef01234567";
+
+    const gitService = {
+      isDirty: async () => false,
+      applyStash: async (identity: string) => {
+        appliedIdentity = identity;
+      },
+    } as unknown as GitService;
+
+    const item = {
+      stash: {
+        index: 0,
+        ref: "stash@{0}",
+        objectId,
+        branch: "main",
+        message: "saved work",
+      },
+    } as StashItem;
+
+    Object.defineProperty(vscode.window, "showInformationMessage", {
+      configurable: true,
+      value: async () => undefined,
+    });
+
+    await applyStash(
+      item,
+      gitService,
+      {
+        refresh: () => {
+          refreshed = true;
+        },
+      },
+      {
+        appendLine: () => undefined,
+      } as unknown as vscode.OutputChannel,
+    );
+
+    assert.strictEqual(appliedIdentity, objectId);
+    assert.strictEqual(refreshed, true);
+  });
+
+  test("does not mutate when the dirty-state check fails", async () => {
+    let applied = false;
+    let errorMessage = "";
+    let output = "";
+
+    const gitService = {
+      isDirty: async () => {
+        throw new GitError("spawn git ENOENT", ["status"], "", 1);
+      },
+      applyStash: async () => {
+        applied = true;
+      },
+    } as unknown as GitService;
+
+    const item = {
+      stash: {
+        index: 0,
+        ref: "stash@{0}",
+        objectId: "object-0",
+        branch: "main",
+        message: "saved work",
+      },
+    } as StashItem;
+
+    Object.defineProperty(vscode.window, "showErrorMessage", {
+      configurable: true,
+      value: async (message: string) => {
+        errorMessage = message;
+        return undefined;
+      },
+    });
+
+    await applyStash(item, gitService, { refresh: () => undefined }, {
+      appendLine: (line: string) => {
+        output += `${line}\n`;
+      },
+    } as unknown as vscode.OutputChannel);
+
+    assert.strictEqual(applied, false);
+    assert.match(output, /spawn git ENOENT/);
     assert.strictEqual(
       errorMessage,
       "Failed to apply stash. See the Minimal Git Explorer output for details.",

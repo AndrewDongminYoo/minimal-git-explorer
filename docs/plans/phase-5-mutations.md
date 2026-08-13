@@ -2,23 +2,25 @@
 
 **Goal:** Add only the safest high-value Git actions.
 
-**Status:** Not started  
+**Status:** Completed
 **Depends on:** Phase 4
+
+> Historical plan: checkout and stash apply now fail closed if dirty-state detection fails, log formatted diagnostics, and show concise notifications.
 
 ## Tasks
 
-- [ ] Create `src/commands/branchCommands.ts`
+- [x] Create `src/commands/branchCommands.ts`
   - `checkoutBranch(item: BranchItem)`:
     1. Run `git status --porcelain` to detect dirty working tree
     2. If dirty: show confirmation dialog (`vscode.window.showWarningMessage` with Yes/No)
     3. If confirmed (or clean): run `git checkout <branch>`
-    4. On git error: show `vscode.window.showErrorMessage` with the raw stderr
+    4. On Git error: log the formatted diagnostic and show a concise error notification
     5. On success: refresh the tree via provider
 
-- [ ] Extend `src/commands/stashCommands.ts` (started in Phase 4):
+- [x] Extend `src/commands/stashCommands.ts` (started in Phase 4):
   - `applyStash` already implemented in Phase 4
 
-- [ ] Error notification pattern (apply consistently):
+- [x] Error notification pattern (apply consistently):
 
   ```typescript
   try {
@@ -26,22 +28,24 @@
     provider.refresh();
   } catch (err) {
     if (err instanceof GitError) {
-      vscode.window.showErrorMessage(`Failed: ${err.stderr || err.message}`);
-      outputChannel.appendLine(err.stderr);
+      outputChannel.appendLine(formatGitError(err));
+      vscode.window.showErrorMessage(
+        "Git operation failed. See the output for details.",
+      );
     }
   }
   ```
 
-- [ ] Refresh after successful mutations:
+- [x] Refresh after successful mutations:
   - All mutation commands must call `provider.refresh()` on success
-  - Partial refresh (section-only) is out of scope for 0.1.0 — always refresh the full tree
+  - Always rediscover the repository and refresh all six views
 
 ## Definition of Done
 
 ```markdown
 - Branch checkout works from the tree (clean and dirty working tree cases)
 - Stash apply works
-- Git errors surface in a notification and in the output channel
+- Git errors produce a concise notification and detailed output-channel diagnostic
 - Tree refreshes after successful operations
 - No mutation command operates without user awareness
 ```

@@ -8,6 +8,9 @@ const EXTENSION_ID = "dongminyu.minimal-git-explorer";
 interface PackageManifest {
   activationEvents?: string[];
   bugs?: { url?: string };
+  capabilities?: {
+    untrustedWorkspaces?: { supported?: boolean; description?: string };
+  };
   categories?: string[];
   contributes?: {
     commands?: Array<{ command: string }>;
@@ -79,8 +82,8 @@ suite("Extension manifest", () => {
   test("uses focused Source Control marketplace metadata", () => {
     const manifest = readManifest();
 
-    assert.deepStrictEqual(manifest.categories, ["Source Control"]);
-    assert.strictEqual(manifest.engines?.vscode, "^1.74.0");
+    assert.deepStrictEqual(manifest.categories, ["Other", "SCM Providers"]);
+    assert.strictEqual(manifest.engines?.vscode, "^1.125.0");
     assert.strictEqual(manifest.icon, "resources/icon.png");
     assert.strictEqual(
       manifest.homepage,
@@ -90,6 +93,14 @@ suite("Extension manifest", () => {
       manifest.bugs?.url,
       "https://github.com/dongminyu/minimal-git-explorer/issues",
     );
+  });
+
+  test("declares its Workspace Trust requirement", () => {
+    const untrustedWorkspaces =
+      readManifest().capabilities?.untrustedWorkspaces;
+
+    assert.strictEqual(untrustedWorkspaces?.supported, false);
+    assert.ok(untrustedWorkspaces?.description?.trim());
   });
 });
 
@@ -103,5 +114,6 @@ suite("Extension activation", () => {
     );
     await extension.activate();
     assert.strictEqual(extension.isActive, true);
+    await vscode.commands.executeCommand("minimal-git-explorer.refresh");
   });
 });

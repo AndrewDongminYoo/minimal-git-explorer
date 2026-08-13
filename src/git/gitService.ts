@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { execGit, GitError } from "../utils/execGit";
+import { execGit, formatGitError, GitError } from "../utils/execGit";
 import {
   GitBranch,
   GitCommit,
@@ -26,6 +26,27 @@ export class GitService {
   ) {}
 
   async listCommits(): Promise<GitCommit[]> {
+    const verifyHeadArgs = ["rev-parse", "--verify", "--quiet", "HEAD"];
+    try {
+      await execGit(verifyHeadArgs, this.repoRoot);
+    } catch (err) {
+      if (
+        err instanceof GitError &&
+        err.exitCode === 1 &&
+        err.systemCode === undefined &&
+        err.signal === undefined &&
+        err.stderr.trim() === ""
+      ) {
+        return [];
+      }
+      if (err instanceof GitError) {
+        this.outputChannel.appendLine(
+          `[git ${verifyHeadArgs.join(" ")}] ${formatGitError(err)}`,
+        );
+      }
+      throw err;
+    }
+
     return this.run(
       [
         "log",
@@ -46,7 +67,11 @@ export class GitService {
       parseLocalBranches,
     );
     const remote = await this.run(
-      ["branch", "-r", "--format=%(refname:short)%09%(objectname:short)"],
+      [
+        "branch",
+        "-r",
+        "--format=%(refname:short)%09%(objectname:short)%09%(symref)",
+      ],
       parseRemoteBranches,
     );
     return [...local, ...remote];
@@ -57,28 +82,10 @@ export class GitService {
   }
 
   async listStashes(): Promise<GitStash[]> {
-    const worktrees = await this.listWorktrees();
-    const allStashes: GitStash[] = [];
-
-    for (const wt of worktrees) {
-      try {
-        const stdout = await execGit(
-          ["stash", "list", "--format=%gd: %gs"],
-          wt.path,
-        );
-        const stashes = parseStashes(stdout);
-        const isLinked = wt.path !== this.repoRoot;
-        for (const stash of stashes) {
-          allStashes.push(
-            isLinked ? { ...stash, worktreePath: wt.path } : stash,
-          );
-        }
-      } catch {
-        // Worktree has no stash ref — skip silently
-      }
-    }
-
-    return allStashes;
+    return this.run(
+      ["stash", "list", "--format=%gd%x09%H%x09%gs"],
+      parseStashes,
+    );
   }
 
   async listTags(): Promise<GitTag[]> {
@@ -87,7 +94,7 @@ export class GitService {
   }
 
   async listWorktrees(): Promise<GitWorktree[]> {
-    return this.run(["worktree", "list", "--porcelain"], parseWorktrees);
+    return this.run(["worktree", "list", "--porcelain", "-z"], parseWorktrees);
   }
 
   async isDirty(cwd = this.repoRoot): Promise<boolean> {
@@ -96,9 +103,11 @@ export class GitService {
       return stdout.trim().length > 0;
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[git status --porcelain] ${err.stderr}`);
+        this.outputChannel.appendLine(
+          `[git status --porcelain] ${formatGitError(err)}`,
+        );
       }
-      return false;
+      throw err;
     }
   }
 
@@ -106,8 +115,8 @@ export class GitService {
     return execGit(["show", "--stat", "--patch", fullHash], this.repoRoot);
   }
 
-  async showStash(ref: string, cwd?: string): Promise<string> {
-    return execGit(["stash", "show", "-p", ref], cwd ?? this.repoRoot);
+  async showStash(objectId: string): Promise<string> {
+    return execGit(["stash", "show", "-p", objectId], this.repoRoot);
   }
 
   async checkoutBranch(branchName: string): Promise<void> {
@@ -115,18 +124,18 @@ export class GitService {
       await execGit(["checkout", branchName], this.repoRoot);
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[checkout] ${err.stderr}`);
+        this.outputChannel.appendLine(`[checkout] ${formatGitError(err)}`);
       }
       throw err;
     }
   }
 
-  async applyStash(ref: string, cwd?: string): Promise<void> {
+  async applyStash(objectId: string): Promise<void> {
     try {
-      await execGit(["stash", "apply", ref], cwd ?? this.repoRoot);
+      await execGit(["stash", "apply", objectId], this.repoRoot);
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[stash apply] ${err.stderr}`);
+        this.outputChannel.appendLine(`[stash apply] ${formatGitError(err)}`);
       }
       throw err;
     }
@@ -158,9 +167,11 @@ export class GitService {
       return parser(stdout);
     } catch (err) {
       if (err instanceof GitError) {
-        this.outputChannel.appendLine(`[git ${args.join(" ")}] ${err.stderr}`);
+        this.outputChannel.appendLine(
+          `[git ${args.join(" ")}] ${formatGitError(err)}`,
+        );
       }
-      return parser("");
+      throw err;
     }
   }
 }

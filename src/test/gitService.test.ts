@@ -6,6 +6,7 @@ import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
 import { GitService } from "../git/gitService";
+import { GitError } from "../utils/execGit";
 
 const execFileAsync = promisify(execFile);
 
@@ -90,10 +91,81 @@ suite("GitService integration", () => {
     const [stash] = await service.listStashes();
 
     const commitOutput = await service.showCommit(commit.fullHash);
-    const stashOutput = await service.showStash(stash.ref);
+    const stashOutput = await service.showStash(stash.objectId);
 
     assert.match(commitOutput, /initial commit/);
     assert.match(stashOutput, /README\.md/);
+  });
+
+  test("lists a shared stash only once with linked worktrees", async () => {
+    const linkedRoot = path.join(tempDir, "linked");
+    await git(["worktree", "add", linkedRoot, "feature/test"], repoRoot);
+
+    const stashes = await service.listStashes();
+
+    assert.strictEqual(stashes.length, 1);
+  });
+
+  test("treats an unborn HEAD as an empty commit list", async () => {
+    const unbornRoot = path.join(tempDir, "unborn");
+    fs.mkdirSync(unbornRoot);
+    await git(["init"], unbornRoot);
+    const unbornService = new GitService(unbornRoot, {
+      appendLine: (line: string) => {
+        output += `${line}\n`;
+      },
+    } as unknown as vscode.OutputChannel);
+
+    const commits = await unbornService.listCommits();
+
+    assert.deepStrictEqual(commits, []);
+    assert.strictEqual(output, "");
+  });
+
+  test("propagates signal termination while checking for an unborn HEAD", async function () {
+    if (process.platform === "win32") {
+      this.skip();
+    }
+
+    const fakeBin = path.join(tempDir, "fake-bin");
+    const fakeGit = path.join(fakeBin, "git");
+    fs.mkdirSync(fakeBin);
+    fs.writeFileSync(fakeGit, "#!/bin/sh\nkill -TERM $$\n", { mode: 0o755 });
+    const originalPath = process.env.PATH;
+
+    try {
+      process.env.PATH = `${fakeBin}${path.delimiter}${originalPath ?? ""}`;
+      await assert.rejects(
+        () => service.listCommits(),
+        (error: unknown) =>
+          error instanceof GitError &&
+          error.exitCode === null &&
+          error.signal === "SIGTERM",
+      );
+    } finally {
+      if (originalPath === undefined) {
+        delete process.env.PATH;
+      } else {
+        process.env.PATH = originalPath;
+      }
+    }
+
+    assert.match(output, /SIGTERM/);
+  });
+
+  test("applies the selected stash after reflog indices change", async () => {
+    const [captured] = await service.listStashes();
+    assert.ok(captured.objectId);
+
+    fs.writeFileSync(path.join(repoRoot, "README.md"), "newer\n");
+    await git(["stash", "push", "-m", "newer work"], repoRoot);
+
+    await service.applyStash(captured.objectId);
+
+    assert.strictEqual(
+      fs.readFileSync(path.join(repoRoot, "README.md"), "utf8"),
+      "changed\n",
+    );
   });
 
   test("detects dirty and clean working trees", async () => {
@@ -102,6 +174,19 @@ suite("GitService integration", () => {
     fs.writeFileSync(path.join(repoRoot, "dirty.txt"), "dirty\n");
 
     assert.strictEqual(await service.isDirty(), true);
+  });
+
+  test("rejects read and dirty-state failures with useful diagnostics", async () => {
+    const missingRoot = path.join(tempDir, "missing");
+    const missingService = new GitService(missingRoot, {
+      appendLine: (line: string) => {
+        output += `${line}\n`;
+      },
+    } as unknown as vscode.OutputChannel);
+
+    await assert.rejects(() => missingService.listCommits(), GitError);
+    await assert.rejects(() => missingService.isDirty(), GitError);
+    assert.match(output, /ENOENT/);
   });
 });
 

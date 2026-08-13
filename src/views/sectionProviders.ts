@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
-import { GitService } from "../git/gitService";
+import { RepositoryServiceAccessor } from "../git/repositoryContext";
 import {
   BranchGroupItem,
   BranchItem,
   CommitItem,
   EmptyItem,
+  ErrorItem,
   RemoteItem,
   RemoteUrlItem,
   StashItem,
@@ -14,6 +15,7 @@ import {
 
 export interface SectionProvider {
   refresh(): void;
+  dispose(): void;
 }
 
 abstract class BaseSectionProvider<T extends vscode.TreeItem>
@@ -22,7 +24,7 @@ abstract class BaseSectionProvider<T extends vscode.TreeItem>
   protected readonly _ev = new vscode.EventEmitter<T | undefined | void>();
   readonly onDidChangeTreeData = this._ev.event;
 
-  constructor(protected readonly svc: GitService | null) {}
+  constructor(protected readonly repository: RepositoryServiceAccessor) {}
 
   refresh(): void {
     this._ev.fire();
@@ -32,47 +34,67 @@ abstract class BaseSectionProvider<T extends vscode.TreeItem>
     return el;
   }
 
+  dispose(): void {
+    this._ev.dispose();
+  }
+
+  protected unavailableItem(): EmptyItem | ErrorItem {
+    return this.repository.errorMessage
+      ? new ErrorItem(this.repository.errorMessage)
+      : new EmptyItem("No Git repository found");
+  }
+
   abstract getChildren(element?: T): Promise<T[]>;
 }
 
 // ── Commits ──────────────────────────────────────────────────────────────────
 
-type CommitNode = CommitItem | EmptyItem;
+type CommitNode = CommitItem | EmptyItem | ErrorItem;
 
 export class CommitsProvider extends BaseSectionProvider<CommitNode> {
   async getChildren(_element?: CommitNode): Promise<CommitNode[]> {
-    if (!this.svc) {
-      return [new EmptyItem("No Git repository found")];
+    const service = this.repository.service;
+    if (!service) {
+      return [this.unavailableItem()];
     }
-    const commits = await this.svc.listCommits();
-    return commits.length
-      ? commits.map((c) => new CommitItem(c))
-      : [new EmptyItem("No commits found")];
+    try {
+      const commits = await service.listCommits();
+      return commits.length
+        ? commits.map((commit) => new CommitItem(commit))
+        : [new EmptyItem("No commits found")];
+    } catch {
+      return [new ErrorItem("Failed to load commits")];
+    }
   }
 }
 
 // ── Branches ─────────────────────────────────────────────────────────────────
 
-type BranchNode = BranchGroupItem | BranchItem | EmptyItem;
+type BranchNode = BranchGroupItem | BranchItem | EmptyItem | ErrorItem;
 
 export class BranchesProvider extends BaseSectionProvider<BranchNode> {
   async getChildren(element?: BranchNode): Promise<BranchNode[]> {
-    if (!this.svc) {
-      return [new EmptyItem("No Git repository found")];
+    const service = this.repository.service;
+    if (!service) {
+      return [this.unavailableItem()];
     }
 
     if (!element) {
-      const branches = await this.svc.listBranches();
-      const local = branches.filter((b) => !b.isRemote);
-      const remote = branches.filter((b) => b.isRemote);
-      const groups: BranchNode[] = [];
-      if (local.length) {
-        groups.push(new BranchGroupItem("local", local));
+      try {
+        const branches = await service.listBranches();
+        const local = branches.filter((branch) => !branch.isRemote);
+        const remote = branches.filter((branch) => branch.isRemote);
+        const groups: BranchNode[] = [];
+        if (local.length) {
+          groups.push(new BranchGroupItem("local", local));
+        }
+        if (remote.length) {
+          groups.push(new BranchGroupItem("remote", remote));
+        }
+        return groups.length ? groups : [new EmptyItem("No branches found")];
+      } catch {
+        return [new ErrorItem("Failed to load branches")];
       }
-      if (remote.length) {
-        groups.push(new BranchGroupItem("remote", remote));
-      }
-      return groups.length ? groups : [new EmptyItem("No branches found")];
     }
 
     if (element instanceof BranchGroupItem) {
@@ -85,19 +107,24 @@ export class BranchesProvider extends BaseSectionProvider<BranchNode> {
 
 // ── Remotes ───────────────────────────────────────────────────────────────────
 
-type RemoteNode = RemoteItem | RemoteUrlItem | EmptyItem;
+type RemoteNode = RemoteItem | RemoteUrlItem | EmptyItem | ErrorItem;
 
 export class RemotesProvider extends BaseSectionProvider<RemoteNode> {
   async getChildren(element?: RemoteNode): Promise<RemoteNode[]> {
-    if (!this.svc) {
-      return [new EmptyItem("No Git repository found")];
+    const service = this.repository.service;
+    if (!service) {
+      return [this.unavailableItem()];
     }
 
     if (!element) {
-      const remotes = await this.svc.listRemotes();
-      return remotes.length
-        ? remotes.map((r) => new RemoteItem(r))
-        : [new EmptyItem("No remotes configured")];
+      try {
+        const remotes = await service.listRemotes();
+        return remotes.length
+          ? remotes.map((remote) => new RemoteItem(remote))
+          : [new EmptyItem("No remotes configured")];
+      } catch {
+        return [new ErrorItem("Failed to load remotes")];
+      }
     }
 
     if (element instanceof RemoteItem) {
@@ -116,48 +143,63 @@ export class RemotesProvider extends BaseSectionProvider<RemoteNode> {
 
 // ── Stashes ───────────────────────────────────────────────────────────────────
 
-type StashNode = StashItem | EmptyItem;
+type StashNode = StashItem | EmptyItem | ErrorItem;
 
 export class StashesProvider extends BaseSectionProvider<StashNode> {
   async getChildren(_element?: StashNode): Promise<StashNode[]> {
-    if (!this.svc) {
-      return [new EmptyItem("No Git repository found")];
+    const service = this.repository.service;
+    if (!service) {
+      return [this.unavailableItem()];
     }
-    const stashes = await this.svc.listStashes();
-    return stashes.length
-      ? stashes.map((s) => new StashItem(s))
-      : [new EmptyItem("No stashes found")];
+    try {
+      const stashes = await service.listStashes();
+      return stashes.length
+        ? stashes.map((stash) => new StashItem(stash))
+        : [new EmptyItem("No stashes found")];
+    } catch {
+      return [new ErrorItem("Failed to load stashes")];
+    }
   }
 }
 
 // ── Tags ─────────────────────────────────────────────────────────────────────
 
-type TagNode = TagItem | EmptyItem;
+type TagNode = TagItem | EmptyItem | ErrorItem;
 
 export class TagsProvider extends BaseSectionProvider<TagNode> {
   async getChildren(_element?: TagNode): Promise<TagNode[]> {
-    if (!this.svc) {
-      return [new EmptyItem("No Git repository found")];
+    const service = this.repository.service;
+    if (!service) {
+      return [this.unavailableItem()];
     }
-    const tags = await this.svc.listTags();
-    return tags.length
-      ? tags.map((t) => new TagItem(t))
-      : [new EmptyItem("No tags found")];
+    try {
+      const tags = await service.listTags();
+      return tags.length
+        ? tags.map((tag) => new TagItem(tag))
+        : [new EmptyItem("No tags found")];
+    } catch {
+      return [new ErrorItem("Failed to load tags")];
+    }
   }
 }
 
 // ── Worktrees ─────────────────────────────────────────────────────────────────
 
-type WorktreeNode = WorktreeItem | EmptyItem;
+type WorktreeNode = WorktreeItem | EmptyItem | ErrorItem;
 
 export class WorktreesProvider extends BaseSectionProvider<WorktreeNode> {
   async getChildren(_element?: WorktreeNode): Promise<WorktreeNode[]> {
-    if (!this.svc) {
-      return [new EmptyItem("No Git repository found")];
+    const service = this.repository.service;
+    if (!service) {
+      return [this.unavailableItem()];
     }
-    const worktrees = await this.svc.listWorktrees();
-    return worktrees.length
-      ? worktrees.map((w) => new WorktreeItem(w))
-      : [new EmptyItem("No worktrees found")];
+    try {
+      const worktrees = await service.listWorktrees();
+      return worktrees.length
+        ? worktrees.map((worktree) => new WorktreeItem(worktree))
+        : [new EmptyItem("No worktrees found")];
+    } catch {
+      return [new ErrorItem("Failed to load worktrees")];
+    }
   }
 }

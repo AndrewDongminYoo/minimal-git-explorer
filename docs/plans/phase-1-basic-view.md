@@ -2,38 +2,37 @@
 
 **Goal:** Show a static TreeView in the Source Control sidebar.
 
-**Status:** Not started
+**Status:** Completed
+
+> Historical plan: the initial single-provider design was superseded in `0.2.0` by six independent TreeViews backed by `src/views/sectionProviders.ts`.
 
 ## Tasks
 
-- [ ] Remove `minimal-git-explorer.helloWorld` from `package.json` and `extension.ts`
-- [ ] Add `views.scm` contribution to `package.json` with view id `minimal-git-explorer.gitExplorer`
-- [ ] Register `minimal-git-explorer.refresh` command in `package.json`
-- [ ] Create `src/views/gitExplorerProvider.ts` implementing `vscode.TreeDataProvider<GitExplorerItem>`
-  - `getTreeItem()`: return the item as-is
-  - `getChildren()`: return 6 static section nodes (Commits, Branches, Remotes, Stashes, Tags, Worktrees)
-  - `_onDidChangeTreeData` event wired to refresh command
-- [ ] Create `src/views/gitExplorerItems.ts` with a `SectionItem extends vscode.TreeItem` class
-- [ ] Register the TreeView in `extension.ts` via `vscode.window.createTreeView`
-- [ ] Create the output channel in `extension.ts`: `vscode.window.createOutputChannel("Minimal Git Explorer")`
+- [x] Remove `minimal-git-explorer.helloWorld` from `package.json` and `extension.ts`
+- [x] Add six `views.scm` contributions to `package.json`
+- [x] Register `minimal-git-explorer.refresh` in `package.json`
+- [x] Create `src/views/sectionProviders.ts` with one `TreeDataProvider` per contributed view
+- [x] Create `src/views/gitExplorerItems.ts` with typed data, empty, and error items
+- [x] Register all six TreeViews in `extension.ts`
+- [x] Create the `Minimal Git Explorer` output channel in `extension.ts`
 
 ## Definition of Done
 
 ```markdown
 - Extension activates without error (F5 in VS Code)
-- Source Control sidebar shows "Minimal Git Explorer" with 6 collapsed sections
+- Source Control sidebar shows six Minimal Git Explorer views
 - Clicking the refresh toolbar button does not throw
 - No "Hello World" command in the Command Palette
 ```
 
 ## Files to Create/Modify
 
-| File                               | Action |
-| ---------------------------------- | ------ |
-| `package.json`                     | Modify |
-| `src/extension.ts`                 | Modify |
-| `src/views/gitExplorerProvider.ts` | Create |
-| `src/views/gitExplorerItems.ts`    | Create |
+| File                            | Action |
+| ------------------------------- | ------ |
+| `package.json`                  | Modify |
+| `src/extension.ts`              | Modify |
+| `src/views/sectionProviders.ts` | Create |
+| `src/views/gitExplorerItems.ts` | Create |
 
 ## Verification
 

@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { findFirstGitRoot } from "./git/repository";
-import { GitService } from "./git/gitService";
+import { RepositoryContext } from "./git/repositoryContext";
 import {
   GIT_EXPLORER_SCHEME,
   GitExplorerContentProvider,
@@ -39,25 +38,21 @@ export async function activate(
       GIT_EXPLORER_SCHEME,
       contentProvider,
     ),
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      if (document.uri.scheme === GIT_EXPLORER_SCHEME) {
+        contentProvider.remove(document.uri);
+      }
+    }),
   );
 
-  const workspaceFolders =
-    vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ?? [];
-  let gitService: GitService | null = null;
+  const repository = new RepositoryContext(outputChannel);
 
-  if (workspaceFolders.length > 0) {
-    const repoRoot = await findFirstGitRoot(workspaceFolders);
-    if (repoRoot) {
-      gitService = new GitService(repoRoot, outputChannel);
-    }
-  }
-
-  const commitsProvider = new CommitsProvider(gitService);
-  const branchesProvider = new BranchesProvider(gitService);
-  const remotesProvider = new RemotesProvider(gitService);
-  const stashesProvider = new StashesProvider(gitService);
-  const tagsProvider = new TagsProvider(gitService);
-  const worktreesProvider = new WorktreesProvider(gitService);
+  const commitsProvider = new CommitsProvider(repository);
+  const branchesProvider = new BranchesProvider(repository);
+  const remotesProvider = new RemotesProvider(repository);
+  const stashesProvider = new StashesProvider(repository);
+  const tagsProvider = new TagsProvider(repository);
+  const worktreesProvider = new WorktreesProvider(repository);
 
   const allProviders = [
     commitsProvider,
@@ -95,28 +90,45 @@ export async function activate(
     }),
   ];
 
-  context.subscriptions.push(...views);
+  context.subscriptions.push(...allProviders, ...views);
 
-  if (gitService) {
-    const userInfo = await gitService.getUserInfo();
-    if (userInfo) {
+  const refreshAll = async (): Promise<void> => {
+    const workspaceFolders =
+      vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ??
+      [];
+    await repository.rediscover(workspaceFolders);
+
+    views.forEach((view) => {
+      view.description = undefined;
+      view.message = undefined;
+    });
+
+    const gitService = repository.service;
+    if (gitService) {
+      const userInfo = await gitService.getUserInfo();
       const repoName = path.basename(gitService.repoRoot);
-      const desc = `${repoName}  ·  ${userInfo.name}`;
+      const description = userInfo
+        ? `${repoName}  ·  ${userInfo.name}`
+        : repoName;
       views.forEach((v) => {
-        v.description = desc;
+        v.description = description;
+      });
+    } else {
+      const message = repository.errorMessage ?? "No Git repository found";
+      views.forEach((view) => {
+        view.message = message;
       });
     }
-  } else {
-    const noRepo = "No Git repository found";
-    views.forEach((v) => {
-      v.message = noRepo;
-    });
-  }
+
+    allProviders.forEach((provider) => provider.refresh());
+  };
+
+  await refreshAll();
 
   registerCommands(
     context,
-    gitService,
-    allProviders,
+    repository,
+    refreshAll,
     contentProvider,
     outputChannel,
   );

@@ -76,8 +76,15 @@ suite("parseLocalBranches", () => {
 });
 
 suite("parseRemoteBranches", () => {
+  test("skips symbolic remote HEAD rows", () => {
+    assert.deepStrictEqual(
+      parseRemoteBranches("origin\tabc1234\trefs/remotes/origin/main"),
+      [],
+    );
+  });
+
   test("parses remote branch", () => {
-    const stdout = "origin/main\tabc1234";
+    const stdout = "origin/main\tabc1234\t";
     const [branch] = parseRemoteBranches(stdout);
     assert.strictEqual(branch.name, "origin/main");
     assert.strictEqual(branch.isRemote, true);
@@ -85,7 +92,8 @@ suite("parseRemoteBranches", () => {
   });
 
   test("skips HEAD pointer lines", () => {
-    const stdout = "origin/HEAD -> origin/main\nabc123\norigin/main\tabc1234";
+    const stdout =
+      "origin/HEAD\tabc123\trefs/remotes/origin/main\norigin/main\tabc1234\t";
     const branches = parseRemoteBranches(stdout);
     assert.ok(branches.every((b) => !b.name.includes("->")));
   });
@@ -96,6 +104,15 @@ suite("parseRemoteBranches", () => {
 });
 
 suite("parseRemotes", () => {
+  test("preserves spaces in local remote paths", () => {
+    const [remote] = parseRemotes(
+      "local\t/tmp/project remote.git (fetch)\nlocal\t/tmp/project remote.git (push)",
+    );
+
+    assert.strictEqual(remote.fetchUrl, "/tmp/project remote.git");
+    assert.strictEqual(remote.pushUrl, "/tmp/project remote.git");
+  });
+
   test("parses fetch and push URLs", () => {
     const stdout = [
       "origin\tgit@github.com:owner/repo.git (fetch)",
@@ -126,8 +143,25 @@ suite("parseRemotes", () => {
 });
 
 suite("parseStashes", () => {
+  test("preserves the stash object ID as an immutable action identity", () => {
+    const objectId = "0123456789abcdef0123456789abcdef01234567";
+    const stashes = parseStashes(
+      `stash@{0}\t${objectId}\tOn main: my saved work`,
+    );
+
+    assert.deepStrictEqual(stashes, [
+      {
+        index: 0,
+        ref: "stash@{0}",
+        objectId,
+        branch: "main",
+        message: "my saved work",
+      },
+    ]);
+  });
+
   test('parses "On branch:" format', () => {
-    const stdout = "stash@{0}: On main: my saved work";
+    const stdout = "stash@{0}\tobject-0\tOn main: my saved work";
     const [stash] = parseStashes(stdout);
     assert.strictEqual(stash.index, 0);
     assert.strictEqual(stash.ref, "stash@{0}");
@@ -136,7 +170,8 @@ suite("parseStashes", () => {
   });
 
   test('parses "WIP on branch:" format', () => {
-    const stdout = "stash@{1}: WIP on feature/xyz: abc1234 some commit";
+    const stdout =
+      "stash@{1}\tobject-1\tWIP on feature/xyz: abc1234 some commit";
     const [stash] = parseStashes(stdout);
     assert.strictEqual(stash.index, 1);
     assert.strictEqual(stash.branch, "feature/xyz");
@@ -145,8 +180,8 @@ suite("parseStashes", () => {
 
   test("parses multiple stashes", () => {
     const stdout = [
-      "stash@{0}: On main: first",
-      "stash@{1}: On main: second",
+      "stash@{0}\tobject-0\tOn main: first",
+      "stash@{1}\tobject-1\tOn main: second",
     ].join("\n");
     const stashes = parseStashes(stdout);
     assert.strictEqual(stashes.length, 2);
@@ -178,13 +213,22 @@ suite("parseTags", () => {
 });
 
 suite("parseWorktrees", () => {
+  test("preserves newlines in NUL-delimited worktree paths", () => {
+    const worktreePath = "/tmp/project\nlinked";
+    const [worktree] = parseWorktrees(
+      `worktree ${worktreePath}\0HEAD abc1234\0branch refs/heads/linked\0\0`,
+    );
+
+    assert.strictEqual(worktree.path, worktreePath);
+  });
+
   test("parses a normal worktree", () => {
     const stdout = [
       "worktree /Users/user/project",
       "HEAD abc1234",
       "branch refs/heads/main",
       "",
-    ].join("\n");
+    ].join("\0");
     const [wt] = parseWorktrees(stdout);
     assert.strictEqual(wt.path, "/Users/user/project");
     assert.strictEqual(wt.headHash, "abc1234");
@@ -199,7 +243,7 @@ suite("parseWorktrees", () => {
       "HEAD def5678",
       "detached",
       "",
-    ].join("\n");
+    ].join("\0");
     const [wt] = parseWorktrees(stdout);
     assert.strictEqual(wt.isDetached, true);
     assert.strictEqual(wt.branch, undefined);
@@ -211,22 +255,23 @@ suite("parseWorktrees", () => {
       "HEAD 0000000",
       "bare",
       "",
-    ].join("\n");
+    ].join("\0");
     const [wt] = parseWorktrees(stdout);
     assert.strictEqual(wt.isBare, true);
   });
 
   test("parses multiple worktrees", () => {
-    const stdout = [
-      "worktree /path/main",
-      "HEAD aaa",
-      "branch refs/heads/main",
-      "",
-      "worktree /path/feature",
-      "HEAD bbb",
-      "branch refs/heads/feature",
-      "",
-    ].join("\n");
+    const stdout =
+      ["worktree /path/main", "HEAD aaa", "branch refs/heads/main", ""].join(
+        "\0",
+      ) +
+      "\0" +
+      [
+        "worktree /path/feature",
+        "HEAD bbb",
+        "branch refs/heads/feature",
+        "",
+      ].join("\0");
     const worktrees = parseWorktrees(stdout);
     assert.strictEqual(worktrees.length, 2);
   });

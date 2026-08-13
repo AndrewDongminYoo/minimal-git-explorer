@@ -1,16 +1,16 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides contributor guidance for work in this repository.
 
 ## Project Overview
 
-A lightweight VS Code extension that adds a focused Git explorer to the Source Control sidebar. Local-first, read-first, no accounts, no telemetry, no background indexing. Target version: `0.1.0`.
-
-**Current state:** Scaffold only (`helloWorld` command stub). Nothing from the planned architecture is implemented yet.
+Minimal Git Explorer is a lightweight VS Code extension that adds six local-first Git views to the Source Control sidebar.
+The current manifest version is `0.2.0`.
+The extension has no accounts, telemetry, background indexing, or network API integration.
 
 ## Documentation Map
 
-Read CLAUDE.md first (always). Then read only what the task requires:
+Read only what the task requires:
 
 | Working on…                       | Read…                                    |
 | --------------------------------- | ---------------------------------------- |
@@ -19,95 +19,81 @@ Read CLAUDE.md first (always). Then read only what the task requires:
 | Why git CLI (not VS Code git API) | `docs/notes/adr-001-git-cli-only.md`     |
 | Why esbuild                       | `docs/notes/adr-002-esbuild-bundler.md`  |
 | Why parsers are pure functions    | `docs/notes/adr-003-parser-isolation.md` |
-| Phase 1 (static TreeView)         | `docs/plans/phase-1-basic-view.md`       |
-| Phase 2 (git data layer)          | `docs/plans/phase-2-git-service.md`      |
-| Phase 3 (render real data)        | `docs/plans/phase-3-tree-rendering.md`   |
-| Phase 4 (read actions)            | `docs/plans/phase-4-read-actions.md`     |
-| Phase 5 (mutations)               | `docs/plans/phase-5-mutations.md`        |
-| Full product spec / non-goals     | `PLAN.md`                                |
+| Initial release history           | `PLAN.md`, `docs/plans/phase-*.md`       |
 
-> Do not read `PLAN.md` for implementation details — use the `docs/` files above. `PLAN.md` is the product source-of-truth; the `docs/` files are the implementation-ready distillations.
+`PLAN.md` and the numbered phase plans are historical `0.1.0` planning artifacts.
+Current behavior and contracts live in `docs/specs/` and the production source.
 
 ## Common Commands
 
 ```bash
-# Compile (type-check + lint + esbuild)
+# Install the pinned dependency graph
+pnpm install --frozen-lockfile
+
+# Compile, type-check, lint, and build
 pnpm run compile
 
-# Watch mode (esbuild + tsc in parallel)
-pnpm run watch
-
-# Type-check only
+# Type-check or lint independently
 pnpm run check-types
-
-# Lint only
 pnpm run lint
 
-# Run tests (compiles first, then runs vscode-test)
+# Run the full extension test suite on stable VS Code
 pnpm test
 
-# Build production bundle (minified, no sourcemaps)
+# Run the supported-version test matrix locally
+VSCODE_TEST_VERSION=1.125.0 pnpm test
+VSCODE_TEST_VERSION=stable pnpm test
+
+# Build the production bundle and package a VSIX
 pnpm run package
+pnpm run vsix
 ```
 
-To run the extension locally: open the project in VS Code and press **F5** (launches Extension Development Host).
-
-Tests live in `src/test/` and compile to `out/test/`. The test runner (`@vscode/test-cli`) requires VS Code to be installed — it launches a headless Electron host.
+Tests live in `src/test/` and compile to `out/test/`.
+The test configuration is in `.vscode-test.mjs`, and CI runs VS Code `1.125.0` plus `stable`.
 
 ## Architecture
 
-### Build pipeline
-
-esbuild bundles `src/extension.ts` → `dist/extension.js` (CJS, Node platform). The `vscode` module is the only external — everything else is bundled inline. Config is in `esbuild.js`.
-
-TypeScript target is ES2022, module system is Node16. `tsconfig.json` enables strict mode with no relaxations.
-
-### Planned source layout (from PLAN.md)
-
-The extension is not yet implemented beyond the scaffold. The intended structure is:
+esbuild bundles `src/extension.ts` to `dist/extension.js` as CommonJS for the Node extension host.
+TypeScript uses strict mode, an ES2022 target, and Node16 modules.
 
 ```log
 src/
-  extension.ts          — activate/deactivate; registers TreeView and commands
+  extension.ts             — activation, six TreeViews, rediscovery, document cleanup
   git/
-    repository.ts       — detect git root via `git rev-parse --show-toplevel`
-    gitService.ts       — one method per section (listCommits, listBranches, etc.)
-    gitTypes.ts         — shared TypeScript interfaces for git data
-    parsers.ts          — pure functions parsing git command stdout into typed objects
+    repository.ts          — git root detection
+    repositoryContext.ts   — current GitService and repository error state
+    gitService.ts          — Git read/action methods
+    gitTypes.ts            — shared Git data interfaces
+    parsers.ts             — pure stdout parsers
   views/
-    gitExplorerProvider.ts  — TreeDataProvider implementation
-    gitExplorerItems.ts     — TreeItem subclasses for each section/item type
+    sectionProviders.ts    — six independent TreeDataProviders
+    gitExplorerItems.ts    — typed data, empty, and error TreeItems
   commands/
-    registerCommands.ts     — wires all commands to context.subscriptions
-    commitCommands.ts
-    branchCommands.ts
-    remoteCommands.ts
-    stashCommands.ts
-    tagCommands.ts
-    worktreeCommands.ts
+    registerCommands.ts    — dynamic command registration
+    *Commands.ts           — section-specific actions
   utils/
-    execGit.ts          — wraps child_process.execFile for git commands
-    openTextDocument.ts — opens read-only virtual documents in the editor
+    execGit.ts             — typed execFile wrapper and diagnostics
+    openTextDocument.ts    — read-only virtual document provider
 ```
 
-### Key design constraints
+## Key Constraints
 
-- **No helloWorld command** — remove `minimal-git-explorer.helloWorld` from `package.json` and `extension.ts` before any meaningful commit.
-- **No mutations without confirmation** — destructive or risky git operations must show a confirmation dialog.
-- **No settings for 0.1.0** — do not add `contributes.configuration` until there is a real user need.
-- **Git commands only** — all data comes from spawning `git` locally. No VS Code git extension API, no libgit2 bindings.
-- **Output channel** — create one named `"Minimal Git Explorer"` and log git command stderr there instead of showing raw errors to users.
-- **View id** — `minimal-git-explorer.gitExplorer`, contributed under the `scm` view container.
+- All Git data comes from local `git` commands through `execFile`.
+- The extension contributes six independent TreeViews under the `scm` container.
+- Refresh must rediscover the repository so a folder that becomes a repository after `git init` is usable without reloading the extension.
+- Empty repository data and Git read errors must render as distinct items.
+- Stash UI labels may use `stash@{N}`, but show/apply actions must use the captured immutable stash object ID.
+- Git command details belong in the `Minimal Git Explorer` output channel; user notifications remain concise.
+- Checkout and stash apply must fail closed when dirty-state detection fails.
+- Restricted Mode is unsupported because local Git commands and hooks may execute.
+- Do not add settings or dependencies without a concrete product need.
 
-### Parser contract
+## Commands
 
-`parsers.ts` must contain pure functions with no side effects. Each parser takes a raw `string` (stdout) and returns a typed array. These are the primary unit-test targets — keep them isolated from VS Code APIs.
+The command IDs are:
 
-### Commands
-
-Registered commands for 0.1.0:
-
-```bash
+```text
 minimal-git-explorer.refresh
 minimal-git-explorer.openCommit
 minimal-git-explorer.checkoutBranch
@@ -118,8 +104,8 @@ minimal-git-explorer.copyTagName
 minimal-git-explorer.openWorktree
 ```
 
-### Testing
+## Testing
 
-Unit tests target parser functions in `src/git/parsers.ts`. The test framework is Mocha via `@vscode/test-cli`. Tests compile to `out/` before running — run `pnpm run compile-tests` separately if you only want to type-check tests.
-
-Manual test checklist (before any release): see `PLAN.md` § "Testing Plan".
+Parser tests remain independent of VS Code APIs.
+Integration tests cover real temporary Git repositories, repository rediscovery, providers, commands, manifest contracts, and extension activation.
+Before release work, run the frozen install, both VS Code test versions, the production build, VSIX packaging, dependency audit, and Trunk checks.

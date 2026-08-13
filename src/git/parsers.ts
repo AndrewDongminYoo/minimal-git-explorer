@@ -88,9 +88,9 @@ export function parseRemoteBranches(stdout: string): GitBranch[] {
       if (parts.length < 2) {
         return [];
       }
-      const [name, shortHash] = parts;
+      const [name, shortHash, symref = ""] = parts;
       const trimmedName = name.trim();
-      if (!trimmedName || trimmedName.includes("->")) {
+      if (!trimmedName || trimmedName.includes("->") || symref.trim()) {
         return [];
       }
       return [
@@ -111,11 +111,17 @@ export function parseRemotes(stdout: string): GitRemote[] {
   }
   const map = new Map<string, { fetch?: string; push?: string }>();
   for (const line of stdout.trim().split("\n")) {
-    const match = line.match(/^(\S+)\s+(\S+)\s+\((fetch|push)\)$/);
-    if (!match) {
+    const firstTab = line.indexOf("\t");
+    const marker = line.match(/\s+\((fetch|push)\)$/);
+    if (firstTab < 1 || !marker || marker.index === undefined) {
       continue;
     }
-    const [, name, url, type] = match;
+    const name = line.slice(0, firstTab).trim();
+    const url = line.slice(firstTab + 1, marker.index);
+    const type = marker[1];
+    if (!name || !url) {
+      continue;
+    }
     const entry = map.get(name) ?? {};
     if (type === "fetch") {
       entry.fetch = url;
@@ -139,27 +145,51 @@ export function parseStashes(stdout: string): GitStash[] {
     .trim()
     .split("\n")
     .flatMap((line) => {
-      const refMatch = line.match(/^(stash@\{(\d+)\}):\s*/);
+      const firstTab = line.indexOf("\t");
+      const secondTab = line.indexOf("\t", firstTab + 1);
+      if (firstTab < 0 || secondTab < 0) {
+        return [];
+      }
+
+      const ref = line.slice(0, firstTab);
+      const refMatch = ref.match(/^stash@\{(\d+)\}$/);
       if (!refMatch) {
         return [];
       }
-      const ref = refMatch[1];
-      const index = parseInt(refMatch[2], 10);
-      const rest = line.slice(refMatch[0].length);
+      const index = parseInt(refMatch[1], 10);
+      const objectId = line.slice(firstTab + 1, secondTab);
+      if (!objectId) {
+        return [];
+      }
+      const rest = line.slice(secondTab + 1);
 
       const onMatch = rest.match(/^On ([^:]+):\s*(.*)/);
       if (onMatch) {
-        return [{ index, ref, branch: onMatch[1], message: onMatch[2] }];
+        return [
+          {
+            index,
+            ref,
+            objectId,
+            branch: onMatch[1],
+            message: onMatch[2],
+          },
+        ];
       }
 
       const wipMatch = rest.match(/^WIP on ([^:]+):\s*\S+\s*(.*)/);
       if (wipMatch) {
         return [
-          { index, ref, branch: wipMatch[1], message: wipMatch[2] || "WIP" },
+          {
+            index,
+            ref,
+            objectId,
+            branch: wipMatch[1],
+            message: wipMatch[2] || "WIP",
+          },
         ];
       }
 
-      return [{ index, ref, branch: "unknown", message: rest }];
+      return [{ index, ref, objectId, branch: "unknown", message: rest }];
     });
 }
 
@@ -178,28 +208,31 @@ export function parseWorktrees(stdout: string): GitWorktree[] {
   if (!stdout.trim()) {
     return [];
   }
-  const blocks = stdout.trim().split(/\n\n+/);
+  const records = stdout.split("\0\0");
   const result: GitWorktree[] = [];
 
-  for (const block of blocks) {
-    const lines = block.trim().split("\n");
+  for (const record of records) {
+    if (!record) {
+      continue;
+    }
+    const fields = record.split("\0");
     let path = "";
     let headHash = "";
     let branch: string | undefined;
     let isBare = false;
     let isDetached = false;
 
-    for (const line of lines) {
-      if (line.startsWith("worktree ")) {
-        path = line.slice("worktree ".length);
-      } else if (line.startsWith("HEAD ")) {
-        headHash = line.slice("HEAD ".length);
-      } else if (line.startsWith("branch ")) {
-        const ref = line.slice("branch ".length);
+    for (const field of fields) {
+      if (field.startsWith("worktree ")) {
+        path = field.slice("worktree ".length);
+      } else if (field.startsWith("HEAD ")) {
+        headHash = field.slice("HEAD ".length);
+      } else if (field.startsWith("branch ")) {
+        const ref = field.slice("branch ".length);
         branch = ref.replace(/^refs\/heads\//, "");
-      } else if (line === "detached") {
+      } else if (field === "detached") {
         isDetached = true;
-      } else if (line === "bare") {
+      } else if (field === "bare") {
         isBare = true;
       }
     }

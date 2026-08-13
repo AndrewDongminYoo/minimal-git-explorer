@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { GitService } from "../git/gitService";
-import { GitError } from "../utils/execGit";
+import { formatGitError, GitError } from "../utils/execGit";
 import {
   GitExplorerContentProvider,
   openReadonlyDocument,
@@ -22,7 +22,7 @@ export async function openCommit(
     await openReadonlyDocument(uri);
   } catch (err) {
     if (err instanceof GitError) {
-      outputChannel.appendLine(`[show commit] ${err.stderr}`);
+      outputChannel.appendLine(`[show commit] ${formatGitError(err)}`);
       vscode.window.showErrorMessage(
         "Failed to open commit. See the Minimal Git Explorer output for details.",
       );
