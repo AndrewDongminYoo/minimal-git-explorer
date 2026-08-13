@@ -16,7 +16,7 @@
     "url": "https://github.com/dongminyu/minimal-git-explorer/issues"
   },
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.125.0"
   },
   "categories": [
     "Other",
