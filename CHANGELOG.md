@@ -19,6 +19,7 @@ All notable changes to Minimal Git Explorer are documented here.
 - Preserved spaces in local remote URLs, excluded symbolic remote HEAD rows, and preserved newline-containing worktree paths with NUL-delimited porcelain output
 - Propagated Git read and dirty-state failures instead of presenting them as empty or clean states
 - Treated newly initialized repositories without commits as empty history instead of a Git read failure
+- Preserved Git process termination signals instead of treating interrupted HEAD checks as empty history
 - Continued multi-root discovery past missing workspace folders while preserving missing Git executable errors
 - Distinguished provider errors from empty data and released closed virtual document content
 - Updated the VS Code test runner so supported and stable hosts run without a manual macOS executable workaround

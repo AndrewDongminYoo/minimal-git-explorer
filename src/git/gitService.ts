@@ -34,6 +34,7 @@ export class GitService {
         err instanceof GitError &&
         err.exitCode === 1 &&
         err.systemCode === undefined &&
+        err.signal === undefined &&
         err.stderr.trim() === ""
       ) {
         return [];

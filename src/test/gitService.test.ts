@@ -122,6 +122,37 @@ suite("GitService integration", () => {
     assert.strictEqual(output, "");
   });
 
+  test("propagates signal termination while checking for an unborn HEAD", async function () {
+    if (process.platform === "win32") {
+      this.skip();
+    }
+
+    const fakeBin = path.join(tempDir, "fake-bin");
+    const fakeGit = path.join(fakeBin, "git");
+    fs.mkdirSync(fakeBin);
+    fs.writeFileSync(fakeGit, "#!/bin/sh\nkill -TERM $$\n", { mode: 0o755 });
+    const originalPath = process.env.PATH;
+
+    try {
+      process.env.PATH = `${fakeBin}${path.delimiter}${originalPath ?? ""}`;
+      await assert.rejects(
+        () => service.listCommits(),
+        (error: unknown) =>
+          error instanceof GitError &&
+          error.exitCode === null &&
+          error.signal === "SIGTERM",
+      );
+    } finally {
+      if (originalPath === undefined) {
+        delete process.env.PATH;
+      } else {
+        process.env.PATH = originalPath;
+      }
+    }
+
+    assert.match(output, /SIGTERM/);
+  });
+
   test("applies the selected stash after reflog indices change", async () => {
     const [captured] = await service.listStashes();
     assert.ok(captured.objectId);
