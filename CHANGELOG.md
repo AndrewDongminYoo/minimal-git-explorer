@@ -6,7 +6,7 @@ All notable changes to Minimal Git Explorer are documented here.
 
 ### Added
 
-- Added explicit Workspace Trust metadata and GitHub Actions coverage for VS Code 1.74.0 and stable
+- Added explicit Workspace Trust metadata and GitHub Actions coverage for VS Code 1.125.0 and stable
 
 ### Changed
 
@@ -18,6 +18,7 @@ All notable changes to Minimal Git Explorer are documented here.
 
 - Preserved spaces in local remote URLs, excluded symbolic remote HEAD rows, and preserved newline-containing worktree paths with NUL-delimited porcelain output
 - Propagated Git read and dirty-state failures instead of presenting them as empty or clean states
+- Treated newly initialized repositories without commits as empty history instead of a Git read failure
 - Distinguished provider errors from empty data and released closed virtual document content
 - Updated the VS Code test runner so supported and stable hosts run without a manual macOS executable workaround
 
