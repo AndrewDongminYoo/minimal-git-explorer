@@ -1,65 +1,60 @@
 # Git Data Contract
 
-Defines the git commands, raw output formats, and TypeScript interfaces for each section.
+This document defines the production Git commands, raw output formats, and TypeScript interfaces.
 
 Implementations live in:
 
 - `src/git/gitTypes.ts` — interfaces
-- `src/git/parsers.ts` — pure parse functions (no VS Code deps, unit-testable)
-- `src/git/gitService.ts` — calls `execGit` and delegates to parsers
-
----
+- `src/git/parsers.ts` — pure parsers with no VS Code dependency
+- `src/git/gitService.ts` — command execution and parser delegation
+- `src/utils/execGit.ts` — typed process execution and diagnostics
 
 ## Commits
 
 ```bash
-git log -n 50 --pretty=format:"%H%x09%h%x09%an%x09%ar%x09%s"
+git log -n 50 --pretty=format:%H%x09%h%x09%an%x09%ae%x09%ar%x09%s
 ```
 
-Tab-separated fields: `fullHash`, `shortHash`, `author`, `relativeDate`, `subject`
+The first five tab boundaries separate `fullHash`, `shortHash`, `author`, `authorEmail`, and `relativeDate`.
+The remaining text is `subject`, so tabs in a subject are preserved.
 
 ```typescript
 interface GitCommit {
   fullHash: string;
   shortHash: string;
   author: string;
+  authorEmail: string;
   relativeDate: string;
   subject: string;
 }
 ```
 
-Tree item label: `${shortHash} ${subject}`
-Tooltip: `${fullHash}\n${author} · ${relativeDate}\n\n${subject}`
-
-Open action: `git show --stat --patch <fullHash>` → read-only virtual document.
-
----
+Open action: `git show --stat --patch <fullHash>` in a read-only virtual document.
 
 ## Branches
 
 ```bash
 # Local
-git branch --format="%(refname:short)%x09%(objectname:short)%x09%(upstream:short)%x09%(HEAD)"
+git branch --format=%(refname:short)%09%(objectname:short)%09%(upstream:short)%09%(HEAD)
 
 # Remote
-git branch -r --format="%(refname:short)%x09%(objectname:short)"
+git branch -r --format=%(refname:short)%09%(objectname:short)%09%(symref)
 ```
+
+Remote rows with a non-empty `symref` are symbolic pointers such as `origin/HEAD` and are not rendered as branches.
 
 ```typescript
 interface GitBranch {
   name: string;
   shortHash: string;
   upstream?: string;
-  isCurrent: boolean; // HEAD == "*"
+  isCurrent: boolean;
   isRemote: boolean;
 }
 ```
 
-Tree structure: two sub-groups (`Local`, `Remote`). Current branch marked with `$(check)` icon or `*` prefix.
-
-Checkout action: run `git checkout <name>`. Prompt confirmation if `git status --porcelain` is non-empty.
-
----
+Checkout action: run `git checkout <name>` only after `git status --porcelain` succeeds.
+Prompt for confirmation when the working tree is dirty.
 
 ## Remotes
 
@@ -67,7 +62,8 @@ Checkout action: run `git checkout <name>`. Prompt confirmation if `git status -
 git remote -v
 ```
 
-Raw output lines: `<name>\t<url> (fetch|push)`
+Raw output lines are `<name>\t<url> (fetch|push)`.
+The parser uses the first tab and final fetch/push marker so local paths and URLs containing spaces are preserved.
 
 ```typescript
 interface GitRemote {
@@ -77,33 +73,33 @@ interface GitRemote {
 }
 ```
 
-Tree structure: remote name → fetch URL child → push URL child (omit push child if identical to fetch).
-
-Copy URL action: `vscode.env.clipboard.writeText(url)`.
-
----
+Copy action: `vscode.env.clipboard.writeText(url)`.
 
 ## Stashes
 
 ```bash
-git stash list --date=relative
+git stash list --format=%gd%x09%H%x09%gs
 ```
 
-Raw output lines: `stash@{N}: On <branch>: <message>` or `stash@{N}: WIP on <branch>: <hash> <message>`
+Raw output fields are display ref, immutable stash commit object ID, and reflog subject.
+The stash ref is shared across linked worktrees, so the command runs once at the repository root.
 
 ```typescript
 interface GitStash {
-  index: number; // N from stash@{N}
-  ref: string; // "stash@{N}"
+  index: number;
+  ref: string; // Display-only reflog identity such as "stash@{0}"
+  objectId: string; // Immutable identity captured when the list is loaded
   branch: string;
   message: string;
 }
 ```
 
-Show action: `git stash show -p stash@{N}` → read-only virtual document.
-Apply action: `git stash apply stash@{N}` → refresh view on success.
+Show and apply actions use `objectId`, not the mutable `stash@{N}` display ref:
 
----
+```bash
+git stash show -p <objectId>
+git stash apply <objectId>
+```
 
 ## Tags
 
@@ -111,7 +107,7 @@ Apply action: `git stash apply stash@{N}` → refresh view on success.
 git tag --sort=-creatordate
 ```
 
-One tag name per line. Limit to 50 tags.
+One tag name is parsed per line, and `GitService` limits the result to 50 tags.
 
 ```typescript
 interface GitTag {
@@ -121,58 +117,52 @@ interface GitTag {
 
 Copy action: `vscode.env.clipboard.writeText(name)`.
 
----
-
 ## Worktrees
 
 ```bash
-git worktree list --porcelain
+git worktree list --porcelain -z
 ```
 
-Porcelain block per worktree:
+Fields are NUL-delimited, and worktree records are separated by a double NUL.
+This preserves valid worktree paths containing newline characters.
 
 ```log
-worktree /path/to/worktree
-HEAD <hash>
-branch refs/heads/<branch>   (or "detached" line)
-[bare]
+worktree /path/to/worktree\0
+HEAD <hash>\0
+branch refs/heads/<branch>\0
+\0
 ```
+
+The `branch` field may be replaced by `detached`, and a record may include `bare`.
 
 ```typescript
 interface GitWorktree {
   path: string;
   headHash: string;
-  branch?: string; // undefined if detached
+  branch?: string;
   isBare: boolean;
   isDetached: boolean;
 }
 ```
 
-Tree item label: last path segment (basename).
-Tooltip: full path + branch + HEAD hash + detached/bare flags.
 Open action: `vscode.commands.executeCommand("vscode.openFolder", uri, { forceNewWindow: true })`.
 
----
-
-## execGit Helper
+## Git Errors
 
 ```typescript
-// src/utils/execGit.ts
-async function execGit(args: string[], cwd: string): Promise<string>;
+class GitError extends Error {
+  readonly args: string[];
+  readonly stderr: string;
+  readonly exitCode: number;
+  readonly systemCode?: string;
+}
 ```
 
-- Uses `child_process.execFile` (not `exec`) to avoid shell injection.
-- Rejects with a typed `GitError` on non-zero exit.
-- Caller decides whether to log stderr to the output channel or surface to user.
-- Never throws raw `Error` — always wraps in `GitError` with `stderr` and `args` fields.
-
----
+`execGit` uses `child_process.execFile` and always wraps command/process failures in `GitError`.
+`formatGitError` returns trimmed stderr or falls back to the error message when stderr is empty.
+Normal non-repository `git rev-parse` exits resolve to `null`, while spawn/system errors are rethrown.
+GitService read methods log diagnostics and rethrow; they never convert failures to empty arrays or a clean working-tree result.
 
 ## Parser Contract
 
-All parsers in `src/git/parsers.ts` must be:
-
-- Pure functions: `(stdout: string) => T[]`
-- No imports from `vscode`
-- No side effects
-- Tested in `src/test/parsers.test.ts`
+All parsers in `src/git/parsers.ts` must be pure `(stdout: string) => T[]` functions, import no VS Code API, have no side effects, and be covered by `src/test/parsers.test.ts`.

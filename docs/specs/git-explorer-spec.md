@@ -1,90 +1,71 @@
 # Git Explorer — Extension Specification
 
-Source: `PLAN.md` (authoritative). This file distills the VS Code contribution contract and command surface for implementation reference.
+This document defines the current VS Code contribution, repository lifecycle, and command surface.
+`PLAN.md` is the historical `0.1.0` release plan.
 
-## View Contribution
+## View Contributions
 
-| Field      | Value                              |
-| ---------- | ---------------------------------- |
-| View ID    | `minimal-git-explorer.gitExplorer` |
-| Title      | `Minimal Git Explorer`             |
-| Container  | `scm` (Source Control sidebar)     |
-| Visibility | When workspace has a git repo      |
+The extension contributes six independent TreeViews under the built-in `scm` Source Control container:
 
-`package.json` contribution point:
+| View ID                          | Name      | Provider class      |
+| -------------------------------- | --------- | ------------------- |
+| `minimal-git-explorer.commits`   | Commits   | `CommitsProvider`   |
+| `minimal-git-explorer.branches`  | Branches  | `BranchesProvider`  |
+| `minimal-git-explorer.remotes`   | Remotes   | `RemotesProvider`   |
+| `minimal-git-explorer.stashes`   | Stashes   | `StashesProvider`   |
+| `minimal-git-explorer.tags`      | Tags      | `TagsProvider`      |
+| `minimal-git-explorer.worktrees` | Worktrees | `WorktreesProvider` |
 
-```json
-"contributes": {
-  "viewsContainers": {},
-  "views": {
-    "scm": [
-      {
-        "id": "minimal-git-explorer.gitExplorer",
-        "name": "Minimal Git Explorer",
-        "when": "gitOpenRepositoryCount != 0"
-      }
-    ]
-  }
-}
-```
+Each provider reads the current `RepositoryContext.service` whenever children are requested.
+Branches contain Local and Remote groups, and remotes may contain fetch/push URL children.
 
-## Tree Structure
+## Empty and Error States
 
-```log
-Minimal Git Explorer
-├─ Commits        (recent 50, collapsible)
-├─ Branches       (Local / Remote sub-groups, collapsible)
-├─ Remotes        (per-remote with fetch/push URLs, collapsible)
-├─ Stashes        (collapsible)
-├─ Tags           (latest 50, collapsible)
-└─ Worktrees      (collapsible)
-```
+A successful empty result renders a disabled `EmptyItem` with section-specific text such as `No stashes found`.
+A Git read failure renders an `ErrorItem` such as `Failed to load stashes` and keeps the detailed diagnostic in the `Minimal Git Explorer` output channel.
 
-Each top-level node is a collapsible `TreeItem` with `collapsibleState = Collapsed`.
-
-Empty state: if a section has no data, show a single disabled child item with a descriptive message (e.g., `"No stashes found"`). If no git repo exists, the view itself shows `"No Git repository found."`.
+When no repository is present, all views show `No Git repository found`.
+When Git repository detection fails because Git cannot be executed, the views show `Git is unavailable` and the process diagnostic is logged.
 
 ## Commands
 
-| Command                               | Trigger                    | Action                                  | Destructive |
-| ------------------------------------- | -------------------------- | --------------------------------------- | ----------- |
-| `minimal-git-explorer.refresh`        | Toolbar button             | Reload all sections                     | No          |
-| `minimal-git-explorer.openCommit`     | Click commit item          | Open `git show` output as read-only doc | No          |
-| `minimal-git-explorer.checkoutBranch` | Click branch item          | `git checkout <branch>`                 | Risky\*     |
-| `minimal-git-explorer.copyRemoteUrl`  | Context menu on remote URL | Copy to clipboard                       | No          |
-| `minimal-git-explorer.showStash`      | Click stash item           | Open stash diff as read-only doc        | No          |
-| `minimal-git-explorer.applyStash`     | Context menu on stash      | `git stash apply stash@{N}`             | No          |
-| `minimal-git-explorer.copyTagName`    | Context menu on tag        | Copy tag name to clipboard              | No          |
-| `minimal-git-explorer.openWorktree`   | Click worktree item        | `vscode.openFolder` in new window       | No          |
+| Command                               | Trigger                 | Action                                        |
+| ------------------------------------- | ----------------------- | --------------------------------------------- |
+| `minimal-git-explorer.refresh`        | Toolbar button          | Rediscover repository and reload all views    |
+| `minimal-git-explorer.openCommit`     | Click commit item       | Open `git show` output as a read-only doc     |
+| `minimal-git-explorer.checkoutBranch` | Click local branch item | Checkout after a fail-closed dirty check      |
+| `minimal-git-explorer.copyRemoteUrl`  | Click remote URL item   | Copy URL to clipboard                         |
+| `minimal-git-explorer.showStash`      | Click stash item        | Open stash object diff as a read-only doc     |
+| `minimal-git-explorer.applyStash`     | Stash context menu      | Apply captured stash object after dirty check |
+| `minimal-git-explorer.copyTagName`    | Click tag item          | Copy tag name to clipboard                    |
+| `minimal-git-explorer.openWorktree`   | Click worktree item     | Open the folder in a new VS Code window       |
 
-\*`checkoutBranch`: ask confirmation only when working tree is dirty. On git error, show raw error message — no custom recovery for 0.1.0.
+Checkout and stash apply ask for confirmation when the working tree is dirty.
+If dirty-state detection fails, the mutation does not run.
+Notifications remain concise, while formatted Git diagnostics are written to the output channel.
 
-**Remove before release:** `minimal-git-explorer.helloWorld`
+## Activation and Refresh
 
-## Output Channel
+`activationEvents` is empty because VS Code 1.74+ activates extensions for contributed views automatically.
+Activation creates the output channel, content provider, repository context, six providers, six TreeViews, and command registrations, then performs the same rediscovery operation used by Refresh.
 
-Create once in `activate()`:
+Repository discovery runs `git rev-parse --show-toplevel` for workspace folders in order and uses the first valid Git root.
+Refresh repeats discovery, so an ordinary workspace folder becomes usable after `git init` without reloading the extension.
+The extension remains intentionally focused on one repository even in a multi-root workspace.
 
-```typescript
-const outputChannel = vscode.window.createOutputChannel("Minimal Git Explorer");
-```
+Successful branch checkout and stash apply await the same full rediscovery/refresh operation before reporting completion.
+External Git operations are not watched automatically.
 
-Log git stderr here. Do not show raw stderr in notification toasts.
+## Virtual Documents
 
-## Activation
+Commit and stash output is stored under the `git-explorer:` URI scheme and opened as a read-only diff document.
+Stored content is removed when the corresponding document closes.
 
-`activationEvents` should be empty (VS Code 1.74+ activates on contributed views automatically). No `onCommand:*` entries needed.
+## Workspace Trust
 
-## Repository Detection
+The manifest declares `capabilities.untrustedWorkspaces.supported` as `false`.
+Local Git commands and Git hooks may run only after the workspace is trusted.
 
-On activation, detect git root:
+## Configuration
 
-```bash
-git rev-parse --show-toplevel
-```
-
-Run from the first workspace folder path. If it fails, the view shows the empty state. Multi-root workspace: use the first folder that returns a valid git root.
-
-## No Settings for 0.1.0
-
-Do not add `contributes.configuration`. No user-facing settings until a real need arises post-release.
+The extension contributes no user-facing settings.

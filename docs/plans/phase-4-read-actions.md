@@ -2,36 +2,37 @@
 
 **Goal:** Allow users to inspect Git objects from the sidebar.
 
-**Status:** Not started  
+**Status:** Completed
 **Depends on:** Phase 3
+
+> Historical plan: current command wiring resolves the active `GitService` through `RepositoryContext`, and stash actions use immutable object IDs.
 
 ## Tasks
 
-- [ ] Create `src/utils/openTextDocument.ts`
-  - `openReadonlyDocument(content: string, languageId?: string): Promise<void>`
-  - Uses a `vscode.TextDocumentContentProvider` registered to a custom URI scheme (`git-explorer:`)
-  - Or: create an untitled document with `vscode.workspace.openTextDocument({ content, language })`
+- [x] Create `src/utils/openTextDocument.ts`
+  - Store generated content under the `git-explorer:` URI scheme
+  - Open generated URIs as read-only diff documents and release their content when they close
 
-- [ ] Create `src/commands/commitCommands.ts`
+- [x] Create `src/commands/commitCommands.ts`
   - `openCommit(item: CommitItem)`: run `git show --stat --patch <fullHash>`, open as read-only doc
 
-- [ ] Create `src/commands/stashCommands.ts`
-  - `showStash(item: StashItem)`: run `git stash show -p stash@{N}`, open as read-only doc
-  - `applyStash(item: StashItem)`: run `git stash apply stash@{N}`, show success/error notification, refresh tree
+- [x] Create `src/commands/stashCommands.ts`
+  - `showStash(item: StashItem)`: run `git stash show -p <objectId>`, open as read-only doc
+  - `applyStash(item: StashItem)`: run `git stash apply <objectId>`, show a success/error notification, and refresh all views
 
-- [ ] Create `src/commands/remoteCommands.ts`
+- [x] Create `src/commands/remoteCommands.ts`
   - `copyRemoteUrl(item: RemoteUrlItem)`: `vscode.env.clipboard.writeText(url)` + show info notification
 
-- [ ] Create `src/commands/tagCommands.ts`
+- [x] Create `src/commands/tagCommands.ts`
   - `copyTagName(item: TagItem)`: `vscode.env.clipboard.writeText(name)` + show info notification
 
-- [ ] Create `src/commands/worktreeCommands.ts`
+- [x] Create `src/commands/worktreeCommands.ts`
   - `openWorktree(item: WorktreeItem)`: `vscode.commands.executeCommand("vscode.openFolder", uri, { forceNewWindow: true })`
 
-- [ ] Create `src/commands/registerCommands.ts`
+- [x] Create `src/commands/registerCommands.ts`
   - Collects all command registrations and pushes to `context.subscriptions`
 
-- [ ] Update `extension.ts` to call `registerCommands(context, gitService, provider)`
+- [x] Update `extension.ts` to call `registerCommands` with the shared repository accessor and asynchronous refresh callback
 
 ## Definition of Done
 

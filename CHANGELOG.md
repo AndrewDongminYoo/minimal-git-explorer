@@ -2,6 +2,25 @@
 
 All notable changes to Minimal Git Explorer are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Added explicit Workspace Trust metadata and GitHub Actions coverage for VS Code 1.74.0 and stable
+
+### Changed
+
+- Switched stash show/apply actions from mutable reflog indices to immutable stash object IDs and list the shared stash ref only once across linked worktrees
+- Made Refresh rediscover repositories, including folders initialized with `git init` after extension activation
+- Synchronized contributor guidance, product specifications, and historical release plans with the current six-TreeView architecture
+
+### Fixed
+
+- Preserved spaces in local remote URLs, excluded symbolic remote HEAD rows, and preserved newline-containing worktree paths with NUL-delimited porcelain output
+- Propagated Git read and dirty-state failures instead of presenting them as empty or clean states
+- Distinguished provider errors from empty data and released closed virtual document content
+- Updated the VS Code test runner so supported and stable hosts run without a manual macOS executable workaround
+
 ## [0.2.0] — 2026-05-30
 
 Release hardening and Git Explorer stability improvements.

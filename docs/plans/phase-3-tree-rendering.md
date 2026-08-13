@@ -2,13 +2,14 @@
 
 **Goal:** Render real Git data in the TreeView.
 
-**Status:** Not started  
+**Status:** Completed
 **Depends on:** Phase 1, Phase 2
+
+> Historical plan: the single-tree structure below was superseded in `0.2.0` by six independent TreeViews in `src/views/sectionProviders.ts`.
 
 ## Tasks
 
-- [ ] Update `gitExplorerItems.ts` with typed item classes:
-  - `SectionItem` (Commits, Branches, etc.) — collapsible, no action
+- [x] Update `gitExplorerItems.ts` with typed item classes:
   - `CommitItem` — label: `${shortHash} ${subject}`, tooltip with full details
   - `BranchGroupItem` (Local / Remote sub-groups)
   - `BranchItem` — shows current marker, upstream branch
@@ -18,24 +19,13 @@
   - `TagItem` — label: tag name
   - `WorktreeItem` — label: basename of path, tooltip: full path + branch + hash
 
-- [ ] Update `gitExplorerProvider.ts`:
-  - On construction: call `detectGitRoot()` and instantiate `GitService`
-  - `getChildren(element?)`:
-    - Root: return 6 `SectionItem`s
-    - `SectionItem(Commits)`: call `gitService.listCommits()` → `CommitItem[]`
-    - `SectionItem(Branches)`: call `gitService.listBranches()` → `[BranchGroupItem(Local), BranchGroupItem(Remote)]`
-    - `BranchGroupItem`: return filtered `BranchItem[]`
-    - `SectionItem(Remotes)`: call `gitService.listRemotes()` → `RemoteItem[]`
-    - `RemoteItem`: return `RemoteUrlItem[]`
-    - `SectionItem(Stashes)`: `StashItem[]`
-    - `SectionItem(Tags)`: `TagItem[]`
-    - `SectionItem(Worktrees)`: `WorktreeItem[]`
-  - Empty sections: return a single disabled `vscode.TreeItem` with descriptive message
-  - No-repo state: provider returns empty array; view's `message` property shows "No Git repository found."
+- [x] Create `sectionProviders.ts` with one provider for commits, branches, remotes, stashes, tags, and worktrees
+  - Each provider reads the current `RepositoryContext.service`
+  - `BranchesProvider` renders Local and Remote groups
+  - `RemotesProvider` renders URL children
+  - Empty sections render `EmptyItem`; read and detection failures render `ErrorItem`
 
-- [ ] Wire `GitService` initialization into `extension.ts`
-  - Pass `outputChannel` to `GitService`
-  - Handle the case where no git repo is detected at activation
+- [x] Wire `RepositoryContext` initialization and rediscovery into `extension.ts`
 
 ## Definition of Done
 
@@ -48,11 +38,11 @@
 
 ## Files to Modify
 
-| File                               | Action |
-| ---------------------------------- | ------ |
-| `src/views/gitExplorerItems.ts`    | Modify |
-| `src/views/gitExplorerProvider.ts` | Modify |
-| `src/extension.ts`                 | Modify |
+| File                            | Action |
+| ------------------------------- | ------ |
+| `src/views/gitExplorerItems.ts` | Modify |
+| `src/views/sectionProviders.ts` | Create |
+| `src/extension.ts`              | Modify |
 
 ## Verification
 

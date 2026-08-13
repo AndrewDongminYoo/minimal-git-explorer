@@ -2,36 +2,38 @@
 
 **Goal:** Read Git repository data through local git commands.
 
-**Status:** Not started  
+**Status:** Completed
 **Depends on:** Phase 1
+
+> Historical plan: current command formats, stable stash identity, and fail-closed error contracts are documented in `docs/specs/git-data-contract.md`.
 
 ## Tasks
 
-- [ ] Create `src/utils/execGit.ts`
+- [x] Create `src/utils/execGit.ts`
   - `execFile`-based wrapper: `execGit(args: string[], cwd: string): Promise<string>`
   - Define `GitError` class with `args`, `stderr`, `exitCode` fields
   - Never throw raw `Error` — always wrap in `GitError`
 
-- [ ] Create `src/git/gitTypes.ts`
+- [x] Create `src/git/gitTypes.ts`
   - Interfaces: `GitCommit`, `GitBranch`, `GitRemote`, `GitStash`, `GitTag`, `GitWorktree`
   - No `vscode` imports
   - See `docs/specs/git-data-contract.md` for field definitions
 
-- [ ] Create `src/git/parsers.ts`
-  - Pure functions: `parseCommits`, `parseBranches`, `parseRemotes`, `parseStashes`, `parseTags`, `parseWorktrees`
+- [x] Create `src/git/parsers.ts`
+  - Pure functions: `parseCommits`, `parseLocalBranches`, `parseRemoteBranches`, `parseRemotes`, `parseStashes`, `parseTags`, `parseWorktrees`
   - No `vscode` imports
   - Handle empty stdout gracefully (return `[]`)
 
-- [ ] Create `src/git/repository.ts`
+- [x] Create `src/git/repository.ts`
   - `detectGitRoot(workspaceFolder: string): Promise<string | null>`
   - Runs `git rev-parse --show-toplevel`
 
-- [ ] Create `src/git/gitService.ts`
+- [x] Create `src/git/gitService.ts`
   - `GitService` class taking `repoRoot: string` and `outputChannel: vscode.OutputChannel`
   - Methods: `listCommits()`, `listBranches()`, `listRemotes()`, `listStashes()`, `listTags()`, `listWorktrees()`
-  - Each method: calls `execGit`, passes stdout to the corresponding parser, logs stderr to `outputChannel` on failure
+  - Each read method calls `execGit`, passes stdout to the corresponding parser, logs formatted diagnostics, and rethrows failures
 
-- [ ] Create `src/test/parsers.test.ts`
+- [x] Create `src/test/parsers.test.ts`
   - Test each parser function with representative git output strings
   - Include edge cases: empty output, unusual branch names, no stashes
 
@@ -41,7 +43,7 @@
 - Each GitService method returns correctly typed data
 - pnpm test passes
 - Parser tests cover the 6 git data types
-- Git command errors are caught and logged (not thrown to the TreeDataProvider)
+- Git command errors are logged and rethrown so providers can render explicit error items
 ```
 
 ## Files to Create

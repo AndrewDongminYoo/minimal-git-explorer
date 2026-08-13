@@ -42,7 +42,7 @@ Checkout and stash apply ask for confirmation when the working tree has uncommit
 
 - Git must be installed and available on `PATH`.
 - VS Code 1.74.0 or newer.
-- A workspace folder containing a Git repository.
+- An open workspace folder. If you run `git init` after opening it, use Refresh to discover the new repository.
 
 ## No configuration required
 
@@ -55,11 +55,11 @@ This extension works out of the box. There are no settings to configure.
 - **Small surface** — every feature maps to a common `git` command.
 - **No telemetry** — nothing is ever sent anywhere.
 
-## Known limitations (v0.1.0)
+## Known limitations
 
 - Single-repository focus. Multi-root workspaces use the first folder that resolves to a Git repository.
-- No auto-refresh. Use the toolbar refresh button after git operations.
-- Stash mutations limited to apply. Pop/drop deferred to v0.2.x.
+- External Git operations are not watched automatically. Use the toolbar refresh button after CLI or other-tool changes.
+- Stash mutations are limited to apply. Pop and drop are not available.
 - No worktree creation/removal. Use the CLI for those.
 
 ## Release notes
