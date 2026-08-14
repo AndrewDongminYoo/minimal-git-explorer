@@ -2,17 +2,24 @@
 
 All notable changes to Minimal Git Explorer are documented here.
 
-## [Unreleased]
+## [0.3.0] — 2026-08-14
+
+Repository lifecycle and Git correctness hardening with section-specific visuals and broader release gates.
 
 ### Added
 
+- Added section-specific SVG icons for commits, branches, remotes, stashes, tags, and worktrees
+- Added a README usage example and extension preview
 - Added explicit Workspace Trust metadata and GitHub Actions coverage for VS Code 1.125.0 and stable
 
 ### Changed
 
+- Raised the minimum supported VS Code version to 1.125.0 and aligned typings, tests, and contributor guidance
+- Refined Marketplace categories and corrected source, homepage, and issue tracker links
 - Switched stash show/apply actions from mutable reflog indices to immutable stash object IDs and list the shared stash ref only once across linked worktrees
 - Made Refresh rediscover repositories, including folders initialized with `git init` after extension activation
 - Synchronized contributor guidance, product specifications, and historical release plans with the current six-TreeView architecture
+- Updated the pinned pnpm toolchain, development dependencies, and Trunk configuration
 
 ### Fixed
 
@@ -23,6 +30,10 @@ All notable changes to Minimal Git Explorer are documented here.
 - Continued multi-root discovery past missing workspace folders while preserving missing Git executable errors
 - Distinguished provider errors from empty data and released closed virtual document content
 - Updated the VS Code test runner so supported and stable hosts run without a manual macOS executable workaround
+
+### Security
+
+- Updated dependency pins and scoped overrides to address the Dependabot advisories open after 0.2.0
 
 ## [0.2.0] — 2026-05-30
 
