@@ -6,7 +6,13 @@ import { RemoteUrlItem } from "../views/gitExplorerItems";
 const SCP_LIKE = /^(?:([^@\s/]+)@)?([^\s/]{2,}):(?!\/)(.+)$/;
 const WEB_PROTOCOLS = new Set(["http:", "https:"]);
 const SSH_PROTOCOLS = new Set(["ssh:", "git+ssh:", "git:"]);
-const AZURE_SSH_HOST = "ssh.dev.azure.com";
+// Both the current and the legacy Azure DevOps transport hosts serve the same
+// `v3/org/project/repo` path, and legacy organizations are reachable at
+// dev.azure.com, so one rewrite covers both.
+const AZURE_SSH_HOSTS = new Set([
+  "ssh.dev.azure.com",
+  "vs-ssh.visualstudio.com",
+]);
 const AZURE_SSH_PATH = /^\/?v3\/([^/]+)\/([^/]+)\/(.+)$/;
 /**
  * Hosts that serve SSH transport only, mapped to the site that serves the
@@ -17,6 +23,7 @@ const AZURE_SSH_PATH = /^\/?v3\/([^/]+)\/([^/]+)\/(.+)$/;
 const TRANSPORT_HOSTS = new Map([
   ["ssh.github.com", "github.com"],
   ["altssh.gitlab.com", "gitlab.com"],
+  ["altssh.bitbucket.org", "bitbucket.org"],
 ]);
 
 /**
@@ -70,11 +77,12 @@ export function toBrowsableUrl(remoteUrl: string): string | null {
 }
 
 /**
- * Azure DevOps is the one common host whose SSH path does not match its web path.
+ * Azure DevOps is the one provider whose SSH path does not match its web path,
+ * so it needs a rewrite rather than a TRANSPORT_HOSTS entry.
  * ponytail: single-provider special case; add another only when a real remote needs it.
  */
 function azureDevOpsUrl(host: string, repoPath: string): string | null {
-  if (host !== AZURE_SSH_HOST) {
+  if (!AZURE_SSH_HOSTS.has(host)) {
     return null;
   }
   const parts = AZURE_SSH_PATH.exec(repoPath);

@@ -32,6 +32,10 @@ suite("toBrowsableUrl", () => {
       toBrowsableUrl("git@ssh.dev.azure.com:v3/org/project/repo"),
       "https://dev.azure.com/org/project/_git/repo",
     );
+    assert.strictEqual(
+      toBrowsableUrl("org@vs-ssh.visualstudio.com:v3/org/project/repo"),
+      "https://dev.azure.com/org/project/_git/repo",
+    );
   });
 
   test("drops a query or fragment that could carry a token", () => {
@@ -64,6 +68,10 @@ suite("toBrowsableUrl", () => {
     assert.strictEqual(
       toBrowsableUrl("ssh://git@altssh.gitlab.com:443/group/repo.git"),
       "https://gitlab.com/group/repo",
+    );
+    assert.strictEqual(
+      toBrowsableUrl("ssh://git@altssh.bitbucket.org:443/owner/repo.git"),
+      "https://bitbucket.org/owner/repo",
     );
   });
 
