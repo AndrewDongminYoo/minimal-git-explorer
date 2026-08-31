@@ -98,6 +98,7 @@ minimal-git-explorer.refresh
 minimal-git-explorer.openCommit
 minimal-git-explorer.checkoutBranch
 minimal-git-explorer.copyRemoteUrl
+minimal-git-explorer.openRemoteUrl
 minimal-git-explorer.showStash
 minimal-git-explorer.applyStash
 minimal-git-explorer.copyTagName

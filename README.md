@@ -25,16 +25,17 @@ Opens in the **Source Control** panel (⌃⇧G). Six collapsible sections, all p
 
 ### Actions
 
-| Action           | How                                      |
-| ---------------- | ---------------------------------------- |
-| Open commit diff | Click any commit                         |
-| Checkout branch  | Click any local branch                   |
-| Copy remote URL  | Click any remote URL                     |
-| Show stash diff  | Click any stash                          |
-| Apply stash      | Right-click stash → Apply Stash          |
-| Copy tag name    | Click any tag                            |
-| Open worktree    | Click any worktree (opens in new window) |
-| Refresh          | Click the ↻ button in the view title bar |
+| Action           | How                                             |
+| ---------------- | ----------------------------------------------- |
+| Open commit diff | Click any commit                                |
+| Checkout branch  | Click any local branch                          |
+| Copy remote URL  | Click any remote URL                            |
+| Open remote page | Right-click remote URL → Open Remote in Browser |
+| Show stash diff  | Click any stash                                 |
+| Apply stash      | Right-click stash → Apply Stash                 |
+| Copy tag name    | Click any tag                                   |
+| Open worktree    | Click any worktree (opens in new window)        |
+| Refresh          | Click the ↻ button in the view title bar        |
 
 Checkout and stash apply ask for confirmation when the working tree has uncommitted changes. Git errors are summarized in a notification and logged to the **Minimal Git Explorer** output channel.
 

@@ -97,6 +97,11 @@
         "category": "Git Explorer"
       },
       {
+        "command": "minimal-git-explorer.openRemoteUrl",
+        "title": "Open Remote in Browser",
+        "category": "Git Explorer"
+      },
+      {
         "command": "minimal-git-explorer.showStash",
         "title": "Show Stash",
         "category": "Git Explorer"
@@ -139,7 +144,12 @@
         {
           "command": "minimal-git-explorer.copyRemoteUrl",
           "when": "view == minimal-git-explorer.remotes && viewItem == remoteUrl",
-          "group": "1_remote"
+          "group": "1_remote@1"
+        },
+        {
+          "command": "minimal-git-explorer.openRemoteUrl",
+          "when": "view == minimal-git-explorer.remotes && viewItem == remoteUrl",
+          "group": "1_remote@2"
         },
         {
           "command": "minimal-git-explorer.showStash",
