@@ -3,19 +3,20 @@ import { RemoteUrlItem } from "../views/gitExplorerItems";
 
 const SCP_LIKE = /^(?:[^@\s/]+@)?([^\s/:@]{2,}):(?!\/)(.+)$/;
 const SCHEME_LIKE =
-  /^(ssh|git\+ssh|git|https?):\/\/(?:[^@/]+@)?([^\s/:@]+)(?::\d+)?\/(.+)$/;
+  /^(ssh|git\+ssh|git|https?):\/\/(?:[^@/]+@)?([^\s/:@]+)(?::(\d+))?\/(.+)$/;
 const AZURE_SSH_HOST = "ssh.dev.azure.com";
 const AZURE_SSH_PATH = /^v3\/([^/]+)\/([^/]+)\/(.+)$/;
 
 /**
  * Converts a Git remote URL to the web page URL of the same repository.
  * Returns null when the remote has no web equivalent, such as a local path.
- * Any embedded credentials are dropped so they never reach the browser, and a
- * host that still carries an `@` is rejected rather than resolved, so a remote
- * like `git@github.com@evil.com:o/r` cannot open a page on the trailing host.
+ * Every credential carrier is dropped so none reaches the browser: userinfo, a
+ * query or fragment such as `?access_token=`, and a host that still holds an
+ * `@`, which is rejected rather than resolved so a remote like
+ * `git@github.com@evil.com:o/r` cannot open a page on the trailing host.
  */
 export function toBrowsableUrl(remoteUrl: string): string | null {
-  const trimmed = remoteUrl.trim();
+  const trimmed = remoteUrl.trim().replace(/[?#].*$/, "");
 
   const scp = SCP_LIKE.exec(trimmed);
   if (scp) {
@@ -23,7 +24,11 @@ export function toBrowsableUrl(remoteUrl: string): string | null {
   }
 
   const scheme = SCHEME_LIKE.exec(trimmed);
-  return scheme ? webUrl(scheme[1], scheme[2], scheme[3]) : null;
+  if (!scheme) {
+    return null;
+  }
+  const [, protocol, host, port, repoPath] = scheme;
+  return webUrl(protocol, host, repoPath, port);
 }
 
 /**
@@ -40,10 +45,20 @@ function azureDevOpsUrl(host: string, repoPath: string): string | null {
     : null;
 }
 
-function webUrl(scheme: string, host: string, repoPath: string): string {
-  const protocol = scheme === "http" ? "http" : "https";
+/**
+ * An SSH transport port says nothing about the web server, so it is discarded,
+ * while a self-hosted HTTP(S) port is part of the page address and is kept.
+ */
+function webUrl(
+  scheme: string,
+  host: string,
+  repoPath: string,
+  port?: string,
+): string {
+  const isWeb = scheme === "http" || scheme === "https";
+  const authority = isWeb && port ? `${host}:${port}` : host;
   const page = repoPath.replace(/^\/+/, "").replace(/\.git\/?$/, "");
-  return `${protocol}://${host}/${page}`;
+  return `${isWeb ? scheme : "https"}://${authority}/${page}`;
 }
 
 export async function copyRemoteUrl(item: RemoteUrlItem): Promise<void> {

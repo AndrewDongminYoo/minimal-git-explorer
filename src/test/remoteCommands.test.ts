@@ -34,6 +34,24 @@ suite("toBrowsableUrl", () => {
     );
   });
 
+  test("drops a query or fragment that could carry a token", () => {
+    assert.strictEqual(
+      toBrowsableUrl("https://host/org/repo.git?access_token=secret"),
+      "https://host/org/repo",
+    );
+    assert.strictEqual(
+      toBrowsableUrl("https://host/org/repo.git#readme"),
+      "https://host/org/repo",
+    );
+  });
+
+  test("keeps a self-hosted web port", () => {
+    assert.strictEqual(
+      toBrowsableUrl("https://git.internal:8443/owner/repo.git"),
+      "https://git.internal:8443/owner/repo",
+    );
+  });
+
   test("keeps plain http remotes on http", () => {
     assert.strictEqual(
       toBrowsableUrl("http://git.internal/owner/repo.git"),
