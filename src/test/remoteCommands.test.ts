@@ -92,6 +92,15 @@ suite("toBrowsableUrl", () => {
     );
   });
 
+  test("accepts an encoded @ inside legitimate userinfo", () => {
+    assert.strictEqual(
+      toBrowsableUrl(
+        "https://user%40example.com:token@github.com/owner/repo.git",
+      ),
+      "https://github.com/owner/repo",
+    );
+  });
+
   test("returns null for remotes without a web page", () => {
     assert.strictEqual(toBrowsableUrl("/tmp/project remote.git"), null);
     assert.strictEqual(toBrowsableUrl("file:///tmp/repo.git"), null);

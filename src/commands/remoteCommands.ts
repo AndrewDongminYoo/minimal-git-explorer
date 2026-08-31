@@ -29,8 +29,9 @@ const TRANSPORT_HOSTS = new Map([
  *
  * Every credential carrier is dropped so none reaches the browser: userinfo, a
  * query or fragment such as `?access_token=`, and a host hidden behind a second
- * `@`, which is rejected rather than resolved so a remote like
- * `git@github.com@evil.com:o/r` does not open a page on the trailing host.
+ * raw `@`, which is rejected rather than resolved so a remote like
+ * `git@github.com@evil.com:o/r` does not open a page on the trailing host. A
+ * username that merely contains an encoded `@` is ordinary and is accepted.
  */
 export function toBrowsableUrl(remoteUrl: string): string | null {
   const trimmed = remoteUrl.trim();
@@ -38,6 +39,15 @@ export function toBrowsableUrl(remoteUrl: string): string | null {
   const candidate = scp
     ? `ssh://${scp[1] ? `${scp[1]}@` : ""}${scp[2]}/${scp[3]}`
     : trimmed;
+
+  // Count raw separators in the authority before parsing. A second one means the
+  // real host hid behind it, while a percent-encoded `@` is a legitimate
+  // username such as `user%40example.com`, and the two are indistinguishable
+  // once URL has decoded them into `username`.
+  const authority = candidate.replace(/^[^:]+:\/\//, "").split("/")[0];
+  if ((authority.match(/@/g) ?? []).length > 1) {
+    return null;
+  }
 
   let parsed: URL;
   try {
@@ -50,9 +60,7 @@ export function toBrowsableUrl(remoteUrl: string): string | null {
   if (!isWeb && !SSH_PROTOCOLS.has(parsed.protocol)) {
     return null;
   }
-  // An encoded `@` survives in the userinfo only when a second separator hid the
-  // real host, so the remote is ambiguous and is not opened.
-  if (!parsed.hostname || parsed.username.includes("%40")) {
+  if (!parsed.hostname) {
     return null;
   }
 
