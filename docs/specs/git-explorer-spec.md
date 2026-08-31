@@ -35,6 +35,7 @@ When Git repository detection fails because Git cannot be executed, the views sh
 | `minimal-git-explorer.openCommit`     | Click commit item       | Open `git show` output as a read-only doc     |
 | `minimal-git-explorer.checkoutBranch` | Click local branch item | Checkout after a fail-closed dirty check      |
 | `minimal-git-explorer.copyRemoteUrl`  | Click remote URL item   | Copy URL to clipboard                         |
+| `minimal-git-explorer.openRemoteUrl`  | Remote URL context menu | Open the repository web page in the browser   |
 | `minimal-git-explorer.showStash`      | Click stash item        | Open stash object diff as a read-only doc     |
 | `minimal-git-explorer.applyStash`     | Stash context menu      | Apply captured stash object after dirty check |
 | `minimal-git-explorer.copyTagName`    | Click tag item          | Copy tag name to clipboard                    |

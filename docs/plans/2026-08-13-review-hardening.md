@@ -1,5 +1,9 @@
 # Review Hardening Implementation Plan
 
+> Completed document: every task in this plan shipped in `0.3.0` through PR #2 and PR #3.
+> The step checkboxes below stay unchecked because most of them record one-time process observations, such as verifying a RED test run, that cannot be reconstructed from the repository.
+> The `0.3.0` CHANGELOG entry and the production source are the record of what landed.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Resolve every concrete P1 through P3 review finding while preserving the existing command and six-TreeView product surface.

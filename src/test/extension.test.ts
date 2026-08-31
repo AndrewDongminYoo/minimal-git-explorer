@@ -42,6 +42,7 @@ suite("Extension manifest", () => {
       "minimal-git-explorer.copyRemoteUrl",
       "minimal-git-explorer.copyTagName",
       "minimal-git-explorer.openCommit",
+      "minimal-git-explorer.openRemoteUrl",
       "minimal-git-explorer.openWorktree",
       "minimal-git-explorer.refresh",
       "minimal-git-explorer.showStash",

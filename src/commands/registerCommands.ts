@@ -11,7 +11,7 @@ import {
 } from "../views/gitExplorerItems";
 import { openCommit } from "./commitCommands";
 import { checkoutBranch } from "./branchCommands";
-import { copyRemoteUrl } from "./remoteCommands";
+import { copyRemoteUrl, openRemoteUrl } from "./remoteCommands";
 import { showStash, applyStash } from "./stashCommands";
 import { copyTagName } from "./tagCommands";
 import { openWorktree } from "./worktreeCommands";
@@ -59,6 +59,16 @@ export function registerCommands(
           return;
         }
         await copyRemoteUrl(item);
+      },
+    ),
+
+    vscode.commands.registerCommand(
+      "minimal-git-explorer.openRemoteUrl",
+      async (item: RemoteUrlItem) => {
+        if (!(item instanceof RemoteUrlItem)) {
+          return;
+        }
+        await openRemoteUrl(item);
       },
     ),
 
