@@ -14,7 +14,10 @@ const AZURE_SSH_PATH = /^\/?v3\/([^/]+)\/([^/]+)\/(.+)$/;
  * host whose web layout also differs, such as Azure DevOps, needs its own
  * function instead because the path changes too.
  */
-const TRANSPORT_HOSTS = new Map([["ssh.github.com", "github.com"]]);
+const TRANSPORT_HOSTS = new Map([
+  ["ssh.github.com", "github.com"],
+  ["altssh.gitlab.com", "gitlab.com"],
+]);
 
 /**
  * Converts a Git remote URL to the web page URL of the same repository.

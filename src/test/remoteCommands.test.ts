@@ -61,6 +61,10 @@ suite("toBrowsableUrl", () => {
       toBrowsableUrl("git@ssh.github.com:owner/repo.git"),
       "https://github.com/owner/repo",
     );
+    assert.strictEqual(
+      toBrowsableUrl("ssh://git@altssh.gitlab.com:443/group/repo.git"),
+      "https://gitlab.com/group/repo",
+    );
   });
 
   test("accepts a bracketed IPv6 authority", () => {
