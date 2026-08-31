@@ -41,6 +41,17 @@ suite("toBrowsableUrl", () => {
     );
   });
 
+  test("rejects remotes whose host hides behind a second credential separator", () => {
+    assert.strictEqual(
+      toBrowsableUrl("git@github.com@evil.com:owner/repo.git"),
+      null,
+    );
+    assert.strictEqual(
+      toBrowsableUrl("ssh://git@github.com@evil.com/owner/repo.git"),
+      null,
+    );
+  });
+
   test("returns null for remotes without a web page", () => {
     assert.strictEqual(toBrowsableUrl("/tmp/project remote.git"), null);
     assert.strictEqual(toBrowsableUrl("file:///tmp/repo.git"), null);

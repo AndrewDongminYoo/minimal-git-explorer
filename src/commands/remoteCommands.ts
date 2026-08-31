@@ -1,16 +1,18 @@
 import * as vscode from "vscode";
 import { RemoteUrlItem } from "../views/gitExplorerItems";
 
-const SCP_LIKE = /^(?:[^@\s/]+@)?([^\s/:]{2,}):(?!\/)(.+)$/;
+const SCP_LIKE = /^(?:[^@\s/]+@)?([^\s/:@]{2,}):(?!\/)(.+)$/;
 const SCHEME_LIKE =
-  /^(ssh|git\+ssh|git|https?):\/\/(?:[^@/]+@)?([^\s/:]+)(?::\d+)?\/(.+)$/;
+  /^(ssh|git\+ssh|git|https?):\/\/(?:[^@/]+@)?([^\s/:@]+)(?::\d+)?\/(.+)$/;
 const AZURE_SSH_HOST = "ssh.dev.azure.com";
 const AZURE_SSH_PATH = /^v3\/([^/]+)\/([^/]+)\/(.+)$/;
 
 /**
  * Converts a Git remote URL to the web page URL of the same repository.
  * Returns null when the remote has no web equivalent, such as a local path.
- * Any embedded credentials are dropped so they never reach the browser.
+ * Any embedded credentials are dropped so they never reach the browser, and a
+ * host that still carries an `@` is rejected rather than resolved, so a remote
+ * like `git@github.com@evil.com:o/r` cannot open a page on the trailing host.
  */
 export function toBrowsableUrl(remoteUrl: string): string | null {
   const trimmed = remoteUrl.trim();
