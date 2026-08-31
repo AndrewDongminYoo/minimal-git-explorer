@@ -8,6 +8,13 @@ const WEB_PROTOCOLS = new Set(["http:", "https:"]);
 const SSH_PROTOCOLS = new Set(["ssh:", "git+ssh:", "git:"]);
 const AZURE_SSH_HOST = "ssh.dev.azure.com";
 const AZURE_SSH_PATH = /^\/?v3\/([^/]+)\/([^/]+)\/(.+)$/;
+/**
+ * Hosts that serve SSH transport only, mapped to the site that serves the
+ * repository page. Add an entry here rather than a branch below; a transport
+ * host whose web layout also differs, such as Azure DevOps, needs its own
+ * function instead because the path changes too.
+ */
+const TRANSPORT_HOSTS = new Map([["ssh.github.com", "github.com"]]);
 
 /**
  * Converts a Git remote URL to the web page URL of the same repository.
@@ -68,13 +75,16 @@ function azureDevOpsUrl(host: string, repoPath: string): string | null {
 /**
  * An SSH transport port says nothing about the web server, so it is discarded,
  * while a self-hosted HTTP(S) port is part of the page address and is kept.
+ * A transport-only host is replaced by its web site, and its port goes with it.
  */
 function webUrl(parsed: URL, isWeb: boolean): string {
   const protocol = parsed.protocol === "http:" ? "http" : "https";
+  const webHost = TRANSPORT_HOSTS.get(parsed.hostname);
   const authority =
-    isWeb && parsed.port
+    webHost ??
+    (isWeb && parsed.port
       ? `${parsed.hostname}:${parsed.port}`
-      : parsed.hostname;
+      : parsed.hostname);
   const page = parsed.pathname.replace(/^\/+/, "").replace(/\.git\/?$/, "");
   return `${protocol}://${authority}/${page}`;
 }

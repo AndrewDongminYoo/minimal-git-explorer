@@ -52,6 +52,17 @@ suite("toBrowsableUrl", () => {
     );
   });
 
+  test("maps a transport-only host to its web site", () => {
+    assert.strictEqual(
+      toBrowsableUrl("ssh://git@ssh.github.com:443/owner/repo.git"),
+      "https://github.com/owner/repo",
+    );
+    assert.strictEqual(
+      toBrowsableUrl("git@ssh.github.com:owner/repo.git"),
+      "https://github.com/owner/repo",
+    );
+  });
+
   test("accepts a bracketed IPv6 authority", () => {
     assert.strictEqual(
       toBrowsableUrl("https://[2001:db8::1]:8443/owner/repo.git"),
