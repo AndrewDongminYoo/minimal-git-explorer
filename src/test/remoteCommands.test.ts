@@ -52,6 +52,13 @@ suite("toBrowsableUrl", () => {
     );
   });
 
+  test("accepts a bracketed IPv6 authority", () => {
+    assert.strictEqual(
+      toBrowsableUrl("https://[2001:db8::1]:8443/owner/repo.git"),
+      "https://[2001:db8::1]:8443/owner/repo",
+    );
+  });
+
   test("keeps plain http remotes on http", () => {
     assert.strictEqual(
       toBrowsableUrl("http://git.internal/owner/repo.git"),
@@ -74,6 +81,8 @@ suite("toBrowsableUrl", () => {
     assert.strictEqual(toBrowsableUrl("/tmp/project remote.git"), null);
     assert.strictEqual(toBrowsableUrl("file:///tmp/repo.git"), null);
     assert.strictEqual(toBrowsableUrl("../sibling.git"), null);
+    assert.strictEqual(toBrowsableUrl("C:\\repo.git"), null);
+    assert.strictEqual(toBrowsableUrl("C:/repos/foo"), null);
   });
 });
 
