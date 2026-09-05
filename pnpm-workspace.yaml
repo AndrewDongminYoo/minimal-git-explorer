@@ -12,7 +12,7 @@ overrides:
   brace-expansion@1: ^1.1.16
   brace-expansion@2: ^2.1.2
   brace-expansion@5: ^5.0.7
-  fast-uri: ^3.1.4
+  fast-uri@3: ^3.1.6 # GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp
   form-data@4: ^4.0.6
   js-yaml@4: ^4.3.0
   linkify-it@5: ^5.0.2
