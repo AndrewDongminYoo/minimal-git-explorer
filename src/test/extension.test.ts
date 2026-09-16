@@ -85,7 +85,7 @@ suite("Extension manifest", () => {
     const manifest = readManifest();
 
     assert.deepStrictEqual(manifest.categories, ["Other", "SCM Providers"]);
-    assert.strictEqual(manifest.engines?.vscode, "^1.125.0");
+    assert.strictEqual(manifest.engines?.vscode, "^1.137.0");
     assert.strictEqual(manifest.icon, "resources/icon.png");
     assert.strictEqual(
       manifest.repository?.url,
