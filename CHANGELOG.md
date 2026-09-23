@@ -8,6 +8,10 @@ All notable changes to Minimal Git Explorer are documented here.
 
 - Added an `Open Remote in Browser` action that converts SSH, `git`, and credential-bearing remote URLs to the repository web page
 
+### Changed
+
+- Raised the minimum supported VS Code version to 1.137.0 and aligned typings, tests, and contributor guidance
+
 ## [0.3.0] — 2026-08-14
 
 Repository lifecycle and Git correctness hardening with section-specific visuals and broader release gates.
