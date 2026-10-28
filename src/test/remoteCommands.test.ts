@@ -22,6 +22,7 @@ suite("toBrowsableUrl", () => {
 
   test("strips credentials from https remotes", () => {
     assert.strictEqual(
+      // trunk-ignore(trufflehog/URI): Synthetic userinfo fixture verifies credential stripping.
       toBrowsableUrl("https://user:token@github.com/owner/repo.git"),
       "https://github.com/owner/repo",
     );
@@ -103,6 +104,7 @@ suite("toBrowsableUrl", () => {
   test("accepts an encoded @ inside legitimate userinfo", () => {
     assert.strictEqual(
       toBrowsableUrl(
+        // trunk-ignore(trufflehog/URI): Synthetic userinfo fixture verifies credential stripping.
         "https://user%40example.com:token@github.com/owner/repo.git",
       ),
       "https://github.com/owner/repo",
