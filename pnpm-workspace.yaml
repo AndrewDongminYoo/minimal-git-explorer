@@ -3,17 +3,20 @@ allowBuilds:
   esbuild: true
   keytar: true # prebuild-install fetches a prebuilt binary; node-gyp is only the fallback
 
+minimumReleaseAgeExclude:
+  - "@azure/msal-common@16.15.0"
+  - "@azure/msal-node@7.1.2"
+
 # Migrated from the "pnpm.overrides" field in package.json, which pnpm 11 no
 # longer reads ("The pnpm field in package.json is no longer read by pnpm").
 overrides:
-  diff: ^8.0.3
-  serialize-javascript: ^7.0.5
-  shell-quote: ^1.9.0 # GHSA-395f-4hp3-45gv
-  brace-expansion@1: ^1.1.16
-  brace-expansion@2: ^2.1.2
-  brace-expansion@5: ^5.0.7
-  fast-uri@3: ^3.1.6 # GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp
-  form-data@4: ^4.0.6
-  js-yaml@4: ^4.3.0
-  linkify-it@5: ^5.0.2
-  undici@7: ^7.28.0
+  # Mocha 11 declares diff 7 and serialize-javascript 6, which have no patched line.
+  # Keep the existing security exceptions limited to that consumer.
+  mocha@11>diff: ^8.0.4 # GHSA-73rr-hh4g-fpgx
+  mocha@11>serialize-javascript: ^7.1.4 # GHSA-m5mm-p8h7-m29v
+  shell-quote@1: ^1.12.0 # GHSA-pqg4-j6r4-53mv
+  "@azure/identity@4>@azure/msal-node": ^7.1.2 # GHSA-xcx6-jx8p-x3h5; offline API and packaging checks
+  brace-expansion@1: ^1.1.21 # GHSA-q2hr-2g5m-vwhr
+  brace-expansion@2: ^2.1.7 # GHSA-q2hr-2g5m-vwhr
+  brace-expansion@5: ^5.0.12 # GHSA-q2hr-2g5m-vwhr
+  js-yaml@4: ^4.3.2 # GHSA-2883-xcg3-v3hh
