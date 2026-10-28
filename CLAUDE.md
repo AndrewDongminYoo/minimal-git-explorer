@@ -47,10 +47,17 @@ VSCODE_TEST_VERSION=stable pnpm test
 # Build the production bundle and package a VSIX
 pnpm run package
 pnpm run vsix
+
+# Verify the offline filesystem secret reader
+python3 -B .trunk/configs/tests/test_trufflehog_to_sarif.py
 ```
 
 Tests live in `src/test/` and compile to `out/test/`.
 The test configuration is in `.vscode-test.mjs`, and CI runs VS Code `1.137.0` plus `stable`.
+Keep `@types/vscode` on the minimum supported VS Code minor line so newer APIs cannot pass type-checking without minimum-host coverage.
+Keep TypeScript within `typescript-eslint`'s declared peer range.
+The project-local TruffleHog reader retains decoded findings even when their raw values are absent literally from the original file.
+It uses file-level locations when needed and fails malformed conversion without emitting a partial clean report.
 
 ## Architecture
 
