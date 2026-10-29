@@ -42,7 +42,7 @@ Two exact URI-detector suppressions annotate existing synthetic credential-strip
 TypeScript transpilation without comments is identical before and after those annotations.
 
 Mocha's consumer-specific overrides pass a real assertion-failure diff reporter control and a two-test parallel-worker run.
-The local secret reader passes its ten regressions.
+The local secret reader passes its thirteen regressions.
 Actual encoded and literal findings both fail configured Trunk with exit `1`; a clean control passes with exit `0`.
 The old reader drops the same encoded finding, confirming the regression.
 
@@ -57,3 +57,10 @@ The final package-manager audit reports no advisories; the direct OSV and full T
 TypeScript `6.0.3` remains within the ESLint integration's `<6.1.0` peer range.
 `@types/vscode@1.137.0` preserves the declared minimum API surface.
 These are the only direct dependencies reported as outdated by the package manager.
+
+## Source-Line Repair
+
+The current reader uses the independently reviewed `localizations` repair at `b47e59659a886ad673a2f4a9bed6a3bf4986615b`.
+It prefers a positive integer filesystem line only when the literal starts on that line.
+Invalid hints retain literal-search and file-level fallbacks.
+Thirteen CLI tests cover repeated and out-of-order findings in addition to the existing lossless conversion cases.
